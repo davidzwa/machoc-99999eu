@@ -1,0 +1,11 @@
+.docker
+.docker/**/*
+.vs
+.vs/**/*
+.vscode
+.vscode/**/*
+.git
+.git/**/*
+
+*/bin*
+*/out*
