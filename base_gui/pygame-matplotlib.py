@@ -5,7 +5,8 @@ import numpy as np
 import pygame
 from pygame.locals import *
 
-from base_gui.sidenav import SideNav
+from base_gui.components.sidenav import SideNav
+from base_gui.simulation.wave import Wave
 
 matplotlib.use("Agg")
 
@@ -41,14 +42,18 @@ def menu_item_clicked(payload: Any):
     print('main menu button clicked', payload)
 
 
-default_button_rect = pygame.Rect(10, 10, 100, 30)
-side_menu = SideNav(screen, default_button_rect, callback=menu_item_clicked)
+nav_rect_bounds = pygame.Rect(0, 0, 200, 800)
+sim_rect_bounds = pygame.Rect(300, 100, 400, 400)
+side_menu = SideNav(screen, nav_rect_bounds, callback=menu_item_clicked)
 button = side_menu.add_button(label="Simulate")
 button2 = side_menu.add_button(label="Stop")
 button2 = side_menu.add_button(label="Reset")
 
+wave = Wave(screen, sim_rect_bounds) # Static/doesnt scale like this
+
 crashed = False
 while not crashed:
+    screen.fill((245, 245, 245))
     events = pygame.event.get()
     for event in events:
         if event.type == pygame.QUIT:
@@ -57,7 +62,11 @@ while not crashed:
     # mouse = pygame.mouse.get_pos()
     # print(mouse)
     side_menu.render(events)
+    side_menu.render_nav_backlight()
+
+    # screen.blit(plot_surface, (200, 0))
+    wave.render(x=50, y=50)
     # button.listen(events)
-    # screen.fill((255, 255, 255))
+
     # button.draw()
     pygame.display.update()
