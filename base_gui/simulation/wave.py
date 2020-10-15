@@ -1,58 +1,46 @@
+import numpy as np
 import pygame
 from pygame import gfxdraw, SRCALPHA, BLEND_ADD
 
+from base_gui.utils.reference_frame import scale_tuple_pix2meter, translate_global_to_local
+
 TARGET_SIZE = 50  # Ellipse x/y radii
-BG_ALPHA_COLOR = (0, 0, 255)
+BG_ALPHA_COLOR = (122, 122, 255)
 
 
 class Wave(object):
-    def __init__(self, screen, bounds_rect):
+    def __init__(self, screen, bounds_rect, origin, radius_max, radius_step):
         assert screen is not None
         self.screen = screen
         self.rect = bounds_rect
+        self.origin = origin  # 2D tuple within rect, we dont validate: expect the user is careful
+        self.radius_max_meters = radius_max  # meters/size units
+        self.radius_step_pixels = radius_step  # pixels
 
-    def render(self, x, y):
+    def adjust_origin_local(self, coords_local_meters):
+        self.origin = (coords_local_meters[0], coords_local_meters[1])
+
+    def render(self):
         self.width = 5
         self.filled = False
-        self.color = (120, 120, 120)
-        self.DrawTarget()
-        # gfxdraw.aacircle(self.screen, x, y, 20, (0, 0, 255))
-        # gfxdraw.filled_circle(self.screen, 150, 50, 15, (0, 0, 255))
-        # pygame.draw.circle(self.screen, (0, 0, 255), (150, 50), 15, 1)
+        self.color = np.array([120, 120, 120])
+        for i in range(1, self.radius_max_meters * self.radius_step_pixels, self.radius_step_pixels):
+            self.draw_wave_circle(i)
 
-    def DrawTarget(self):
+    def draw_wave_circle(self, radius):
+        # https://abarry.org/antialiased-rings-filled-circles-in-pygame/
         # outside antialiased circle
+        pixel_origin = translate_global_to_local(scale_tuple_pix2meter(self.origin, reverse=True), self.rect, reverse=True)
         pygame.gfxdraw.aacircle(self.screen,
-                                self.rect.left + int(self.rect.width / 2),
-                                self.rect.top + int(self.rect.height / 2),
-                                int(self.rect.width / 2 - 1),
+                                pixel_origin[0],
+                                pixel_origin[1],
+                                radius,
                                 self.color)
-
-        # outside filled circle
-        pygame.gfxdraw.filled_ellipse(self.screen,
-                                      self.rect.left + int(self.rect.width / 2),
-                                      self.rect.top + int(self.rect.height / 2),
-                                      int(self.rect.width / 2 - 1),
-                                      int(self.rect.width / 2 - 1),
-                                      self.color)
-
         temp = pygame.Surface((TARGET_SIZE, TARGET_SIZE), SRCALPHA)  # the SRCALPHA flag denotes pixel-level alpha
-
-        if (self.filled == False):
-            # inside background color circle
-
-            pygame.gfxdraw.filled_ellipse(temp,
-                                          self.rect.left + int(self.rect.width / 2),
-                                          self.rect.top + int(self.rect.height / 2),
-                                          int(self.rect.width / 2 - self.width),
-                                          int(self.rect.width / 2 - self.width),
-                                          BG_ALPHA_COLOR)
-
-            # inside antialiased circle
-            pygame.gfxdraw.aacircle(temp,
-                                    self.rect.left + int(self.rect.width / 2),
-                                    self.rect.top + int(self.rect.height / 2),
-                                    int(self.rect.width / 2 - self.width),
-                                    BG_ALPHA_COLOR)
-
         self.screen.blit(temp, (0, 0), None, BLEND_ADD)
+
+    def translate_to_global_x(self):
+        return self.origin[0] + self.rect.left
+
+    def translate_to_global_y(self):
+        return self.origin[1] + self.rect.top

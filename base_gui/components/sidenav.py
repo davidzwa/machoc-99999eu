@@ -31,7 +31,7 @@ class SideNav(object):
 
     def render_nav_backlight(self, width=200):
         s = pygame.Surface((width, self.screen.get_size()[1]))  # the size of your rect
-        s.set_alpha(64)  # alpha level
+        s.set_alpha(255)  # alpha level
         s.fill((200, 200, 200))  # this fills the entire surface
         self.screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
 
