@@ -8,8 +8,9 @@ autopep8 = "*"
 rope = "*"
 
 [packages]
-asyncio = "*"
-aio-pika = "*"
+pygame = "*"
+numpy = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.7"
