@@ -3,9 +3,11 @@ from typing import Any
 import matplotlib
 import numpy as np
 import pygame
+from pygame import Vector2
 from pygame.locals import *
 
 from base_gui.components.sidenav import SideNav
+from base_gui.simulation.node import Node
 from base_gui.simulation.wave import Wave
 from base_gui.utils.reference_frame import translate_global_to_local, scale_tuple_pix2meter, PIXELS_PER_METER
 
@@ -36,7 +38,9 @@ pygame.display.flip()
 
 a = np.array([1, 2, 3])
 plot_surface = plot(a)
-screen.blit(plot_surface, (200, 0))
+
+
+# screen.blit(plot_surface, (200, 0))
 
 
 def menu_item_clicked(payload: Any):
@@ -51,13 +55,19 @@ def mouse_in_frame(mouse_coord, rect):
 
 
 nav_rect_bounds = pygame.Rect(0, 0, 200, 800)
-sim_rect_bounds = pygame.Rect(200, 0, 600, 800)
+local_rect = pygame.Rect(200, 0, 600, 800)
 side_menu = SideNav(screen, nav_rect_bounds, callback=menu_item_clicked)
 button = side_menu.add_button(label="Simulate")
 button2 = side_menu.add_button(label="Stop")
-button2 = side_menu.add_button(label="Reset")
+button3 = side_menu.add_button(label="Reset")
 
-wave = Wave(screen, sim_rect_bounds, (50, 50), 50, PIXELS_PER_METER)  # Static/doesnt scale like this
+wave = Wave(screen, local_rect, (50, 50), 50, PIXELS_PER_METER)  # Static/doesnt scale like this
+
+node_positions = ((2, 2), (2, 3), (3, 4), (2, 6))
+sim_nodes = list()
+for node_pos in node_positions:
+    dot_node = Node(Vector2(node_pos), local_rect, screen, Color("red"))
+    sim_nodes.append((dot_node))
 
 crashed = False
 while not crashed:
@@ -69,14 +79,17 @@ while not crashed:
 
     ### PROCESS
     mouse_global_pixels = pygame.mouse.get_pos()
-    if mouse_in_frame(mouse_global_pixels, sim_rect_bounds):
-        mouse_local_pixels = translate_global_to_local(mouse_global_pixels, sim_rect_bounds)
+    if mouse_in_frame(mouse_global_pixels, local_rect):
+        mouse_local_pixels = translate_global_to_local(mouse_global_pixels, local_rect)
         mouse_local_meters = scale_tuple_pix2meter(mouse_local_pixels)
         wave.adjust_origin_local(mouse_local_meters)  # Relative positioning
 
     ### RENDER
     screen.fill((245, 245, 245))
     wave.render()
+
+    for sim_node in sim_nodes:
+        sim_node.render()
 
     side_menu.render_nav_backlight()
     side_menu.render(events)
