@@ -2,26 +2,31 @@ import logging
 from typing import Callable, Any
 
 import pygame
-from pygame import Vector2, RESIZABLE, DOUBLEBUF
+from pygame import Vector2, RESIZABLE, DOUBLEBUF, Surface
 
 from base_gui.constants import SIM_SIZE, NAV_WIDTH
 from base_gui.gui_components.sidenav import SideNav
+from base_gui.gui_components.timeline import Timeline
 from base_gui.utils.reference_frame import vector2_to_int_tuple
 
 
 class Game(object):
     def __init__(self, size: Vector2):
-        self.screen = None
-        self.window = None
+        self.screen: Surface = None
         self.size = size
 
         self.nav_rect_bounds = pygame.Rect(0, 0, NAV_WIDTH, SIM_SIZE.y)
         self.side_menu = None
+        self.timeline = None
 
     def create_game(self):
         pygame.init()
-        self.window = pygame.display.set_mode(vector2_to_int_tuple(self.size), DOUBLEBUF | RESIZABLE)
-        self.screen = pygame.display.get_surface()
+        pygame.font.init()
+        print(pygame.font.get_default_font())
+        self.font = pygame.font.Font(pygame.font.get_default_font(), 15)
+        self.screen = pygame.display.set_mode(vector2_to_int_tuple(self.size), DOUBLEBUF | RESIZABLE)
+
+        pygame.display.set_caption("Six Figure Potential - MacRouting Simulator")
         pygame.display.flip()
 
     def add_nav_menu(self, generic_callback=None):
@@ -32,3 +37,8 @@ class Game(object):
             logging.ERROR("Should run add_nav_menu before adding buttons.")
         self.side_menu.add_button(label=label, button_callback=button_callback)
 
+    def add_timeline(self, position: Vector2, size: Vector2):
+        self.timeline = Timeline(self.screen, position, size, lambda: self.timeline_select_update())
+
+    def timeline_select_update(self):
+        print("Timeline updated")
