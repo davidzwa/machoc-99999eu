@@ -26,7 +26,7 @@ class GuiSim(Game):
         cov = [[cov_diag, 0], [0, cov_diag]]  # Spherical distribution
         node_positions_np = np.random.multivariate_normal(mean, cov, num_nodes)
         self.generate_nodes(node_positions_np)
-        LOGGER.info("Generated %n multivariate nodes 2D".format(num_nodes))
+        LOGGER.info("Generated {} multivariate nodes 2D".format(num_nodes))
 
     def generate_nodes(self, node_positions_np):
         """
