@@ -1,6 +1,7 @@
 import numpy as np
 import pygame
-from pygame import gfxdraw, SRCALPHA, BLEND_ADD
+from pygame import gfxdraw, SRCALPHA, BLEND_ADD, Surface
+from pygame.rect import Rect
 
 from base_gui.utils.reference_frame import scale_tuple_pix2meter, translate_global_to_local
 
@@ -9,11 +10,17 @@ BG_ALPHA_COLOR = (122, 122, 255)
 
 
 class Wave(object):
-    def __init__(self, screen, bounds_rect, origin, radius_max, radius_step):
+    def __init__(self,
+                 screen: Surface,
+                 bounds_rect: Rect,
+                 local_origin_offset: pygame.Vector2,
+                 radius_max,
+                 radius_step):
         assert screen is not None
         self.screen = screen
         self.rect = bounds_rect
-        self.origin = origin  # 2D tuple within rect, we dont validate: expect the user is careful
+        self.local_origin_offset = local_origin_offset
+        self.origin = (0, 0)  # 2D tuple within rect, we dont validate: expect the user is careful
         self.radius_max_meters = radius_max  # meters/size units
         self.radius_step_pixels = radius_step  # pixels
 
@@ -30,7 +37,11 @@ class Wave(object):
     def draw_wave_circle(self, radius):
         # https://abarry.org/antialiased-rings-filled-circles-in-pygame/
         # outside antialiased circle
-        pixel_origin = translate_global_to_local(scale_tuple_pix2meter(self.origin, reverse=True), self.rect, reverse=True)
+        pixel_origin = translate_global_to_local(
+            scale_tuple_pix2meter(self.origin, reverse=True),
+            self.rect,
+            self.local_origin_offset,
+            reverse=True)
         pygame.gfxdraw.aacircle(self.screen,
                                 pixel_origin[0],
                                 pixel_origin[1],

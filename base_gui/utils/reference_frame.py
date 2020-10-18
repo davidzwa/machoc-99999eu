@@ -1,4 +1,5 @@
 from pygame import Vector2
+from pygame.rect import Rect
 
 PIXELS_PER_METER = 20
 
@@ -19,23 +20,25 @@ def scale_tuple_pix2meter(coord, reverse=False):
 
 
 # This function serves as reference frame translation
-def translate_global_to_local(position, reference_frame_rect, reverse=False):
+def translate_global_to_local(position:tuple, reference_frame_rect:Rect, local_origin:Vector2, reverse=False):
     if not reverse:
-        return (position[0] - reference_frame_rect.left, position[1] - reference_frame_rect.top)
+        return (position[0] - int(local_origin.x) - reference_frame_rect.left,
+                position[1] - int(local_origin.y) - reference_frame_rect.top)
     else:
-        return (position[0] + reference_frame_rect.left, position[1] + reference_frame_rect.top)
+        return (position[0] + int(local_origin.x) + reference_frame_rect.left,
+                position[1] + int(local_origin.y) + reference_frame_rect.top)
 
 
-def vector2_global_to_local(vector: Vector2, reference_frame_rect, reverse: bool = False):
+def vector2_global_to_local(vector: Vector2, reference_frame_rect, local_origin_offset, reverse: bool = False):
     if not reverse:
         pos = (vector.x, vector.y)
         pos_transformed_local = scale_tuple_pix2meter(
-            translate_global_to_local(pos, reference_frame_rect))
+            translate_global_to_local(pos, reference_frame_rect, local_origin_offset))
         return Vector2(pos_transformed_local)
     else:
         pos = (vector.x, vector.y)
         pos_scaled = scale_tuple_pix2meter(pos, True)
-        pos_scaled_global = translate_global_to_local(pos_scaled, reference_frame_rect, True)
+        pos_scaled_global = translate_global_to_local(pos_scaled, reference_frame_rect, local_origin_offset, True)
         return Vector2(pos_scaled_global)
 
 

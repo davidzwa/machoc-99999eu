@@ -3,7 +3,7 @@ from typing import Callable, Any, List
 import pygame
 
 from base_gui.app_logging import log_child
-from base_gui.components.callbackbutton import CallbackButton
+from base_gui.gui_components.callbackbutton import CallbackButton
 from pygame_widgets import Button
 
 DEFAULT_OFFSET_X = 0
@@ -18,7 +18,7 @@ class SideNav(object):
                  nav_rect_bounds,
                  offset_x=DEFAULT_OFFSET_X,
                  offset_y=DEFAULT_OFFSET_Y,
-                 callback: Callable[[Button], Any] = None
+                 generic_callback: Callable[[Button], Any] = None
                  ):
         assert screen is not None
         assert nav_rect_bounds is not None
@@ -27,7 +27,7 @@ class SideNav(object):
         self.offset_x = offset_x
         self.offset_y = offset_y
 
-        self.callback = callback
+        self.callback = generic_callback
 
     def render_nav_backlight(self, width=200):
         s = pygame.Surface((width, self.screen.get_size()[1]))  # the size of your rect
@@ -35,7 +35,7 @@ class SideNav(object):
         s.fill((200, 200, 200))  # this fills the entire surface
         self.screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
 
-    def add_button(self, label):
+    def add_button(self, label, button_callback: Callable[[Any], Any] = None):
         button = Button(
             self.screen,
             self.nav_rect_bounds.left + 5 + len(self.buttons) * self.offset_x,
@@ -50,12 +50,15 @@ class SideNav(object):
             pressedColour=(255, 255, 240),
             radius=5
         )
-        cbutton = CallbackButton(button, self.button_clicked)
+        if button_callback is None:
+            cbutton = CallbackButton(button, self.button_clicked)
+        else:
+            cbutton = CallbackButton(button, button_callback)
         self.buttons.append(cbutton)
         return button
 
     def button_clicked(self, cbutton: CallbackButton):
-        log_child('button clicked:', cbutton.button.text)
+        log_child('button clicked without callback:', cbutton.button.text)
 
         self.callout(cbutton)
 

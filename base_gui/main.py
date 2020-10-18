@@ -1,50 +1,22 @@
 from typing import Any
 
-import matplotlib
 import numpy as np
 import pygame
 from pygame import Vector2
-from pygame.locals import *
 
-from base_gui.components.sidenav import SideNav
-from base_gui.simulation.node import Node
+from base_gui.app_logging import LOGGER
+from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, NUM_NODES
+from base_gui.simulation.gui_sim import GuiSim
 from base_gui.simulation.wave import Wave
 from base_gui.utils.reference_frame import translate_global_to_local, scale_tuple_pix2meter, PIXELS_PER_METER
 
-matplotlib.use("Agg")
-
-import matplotlib.pyplot as plt
-import matplotlib.backends.backend_agg as agg
-
-fig = plt.figure(figsize=[3, 3])
-ax = fig.add_subplot(111)
-canvas = agg.FigureCanvasAgg(fig)
-
-
-def plot(data):
-    ax.plot(data)
-    canvas.draw()
-    renderer = canvas.get_renderer()
-    raw_data = renderer.tostring_rgb()
-    size = canvas.get_width_height()
-    return pygame.image.fromstring(raw_data, size, "RGB")
-
-
-pygame.init()
-window = pygame.display.set_mode((800, 600), DOUBLEBUF | RESIZABLE)
-screen = pygame.display.get_surface()
-size = canvas.get_width_height()
-pygame.display.flip()
-
-a = np.array([1, 2, 3])
-plot_surface = plot(a)
-
-
-# screen.blit(plot_surface, (200, 0))
-
 
 def menu_item_clicked(payload: Any):
-    print('main menu button clicked', payload)
+    LOGGER.info('main menu button clicked')
+
+
+def start_simulation(payload: Any):
+    LOGGER.info('start clicked')
 
 
 def mouse_in_frame(mouse_coord, rect):
@@ -53,21 +25,19 @@ def mouse_in_frame(mouse_coord, rect):
            and mouse_coord[1] > rect.top \
            and mouse_coord[1] < rect.top + rect.height
 
+simulation_window_rect = pygame.Rect(NAV_WIDTH, 0, SIM_SIZE.x, SIM_SIZE.y)
+simulation_origin = Vector2(int(SIM_SIZE.x / 2), int(SIM_SIZE.y / 2))
 
-nav_rect_bounds = pygame.Rect(0, 0, 200, 800)
-local_rect = pygame.Rect(200, 0, 600, 800)
-side_menu = SideNav(screen, nav_rect_bounds, callback=menu_item_clicked)
-button = side_menu.add_button(label="Simulate")
-button2 = side_menu.add_button(label="Stop")
-button3 = side_menu.add_button(label="Reset")
+guiSim = GuiSim(SCREEN_SIZE, simulation_window_rect, simulation_origin)
+guiSim.create_game()
+guiSim.add_nav_menu()
+guiSim.add_nav_button(label="Simulate", button_callback=start_simulation)
+guiSim.add_nav_button(label="Stop", button_callback=None)
+guiSim.add_nav_button(label="Reset", button_callback=None)
 
-wave = Wave(screen, local_rect, (50, 50), 50, PIXELS_PER_METER)  # Static/doesnt scale like this
-
-node_positions = ((2, 2), (2, 3), (3, 4), (2, 6))
-sim_nodes = list()
-for node_pos in node_positions:
-    dot_node = Node(Vector2(node_pos), local_rect, screen, Color("red"))
-    sim_nodes.append((dot_node))
+guiSim.generate_nodes_multivariate(NUM_NODES, 20)
+wave = Wave(guiSim.screen, simulation_window_rect, simulation_origin, 50,
+            PIXELS_PER_METER)  # Static/doesnt scale like this
 
 crashed = False
 while not crashed:
@@ -79,19 +49,17 @@ while not crashed:
 
     ### PROCESS
     mouse_global_pixels = pygame.mouse.get_pos()
-    if mouse_in_frame(mouse_global_pixels, local_rect):
-        mouse_local_pixels = translate_global_to_local(mouse_global_pixels, local_rect)
+    if mouse_in_frame(mouse_global_pixels, simulation_window_rect):
+        mouse_local_pixels = translate_global_to_local(mouse_global_pixels, simulation_window_rect, simulation_origin)
         mouse_local_meters = scale_tuple_pix2meter(mouse_local_pixels)
         wave.adjust_origin_local(mouse_local_meters)  # Relative positioning
 
     ### RENDER
-    screen.fill((245, 245, 245))
+    guiSim.screen.fill((245, 245, 245))
     wave.render()
 
-    for sim_node in sim_nodes:
-        sim_node.render()
+    guiSim.render_datanodes()
 
-    side_menu.render_nav_backlight()
-    side_menu.render(events)
-    # screen.blit(plot_surface, (200, 0))
+    guiSim.side_menu.render_nav_backlight()
+    guiSim.side_menu.render(events)
     pygame.display.update()
