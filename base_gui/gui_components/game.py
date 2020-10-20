@@ -19,23 +19,24 @@ class Game(object):
         self.side_menu = None
         self.timeline = None
 
-    def create_game(self):
+    def create_game(self, generic_nav_callback=None):
         pygame.init()
         pygame.font.init()
-        print(pygame.font.get_default_font())
         self.font = pygame.font.Font(pygame.font.get_default_font(), 15)
         self.screen = pygame.display.set_mode(vector2_to_int_tuple(self.size), DOUBLEBUF | RESIZABLE)
-
+        self.side_menu = SideNav(self.screen, self.nav_rect_bounds, generic_callback=generic_nav_callback)
         pygame.display.set_caption("Six Figure Potential - MacRouting Simulator")
         pygame.display.flip()
-
-    def add_nav_menu(self, generic_callback=None):
-        self.side_menu = SideNav(self.screen, self.nav_rect_bounds, generic_callback=generic_callback)
 
     def add_nav_button(self, label: str, button_callback: Callable[[Any], Any] = None):
         if self.side_menu is None:
             logging.ERROR("Should run add_nav_menu before adding buttons.")
-        self.side_menu.add_button(label=label, button_callback=button_callback)
+        return self.side_menu.add_button(label=label, button_callback=button_callback)
+
+    def add_nav_checkbox_group(self, labels: tuple):
+        if self.side_menu is None:
+            logging.ERROR("Should run add_nav_menu before adding buttons.")
+        return self.side_menu.add_checkbox_group(labels)
 
     def add_timeline(self, position: Vector2, size: Vector2):
         self.timeline = Timeline(self.screen, position, size, lambda: self.timeline_select_update())

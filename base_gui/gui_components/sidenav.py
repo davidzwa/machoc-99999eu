@@ -5,6 +5,7 @@ import pygame
 from base_gui.app_logging import log_child
 from base_gui.gui_components.callbackbutton import CallbackButton
 from pygame_widgets import Button
+from pygame_widgets.selection import Checkbox
 
 DEFAULT_OFFSET_X = 0
 DEFAULT_OFFSET_Y = 40
@@ -12,6 +13,7 @@ DEFAULT_OFFSET_Y = 40
 
 class SideNav(object):
     buttons: List[CallbackButton] = []
+    checkbox_groups: List[Checkbox] = []
 
     def __init__(self,
                  screen,
@@ -35,11 +37,23 @@ class SideNav(object):
         s.fill((200, 200, 200))  # this fills the entire surface
         self.screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
 
+    def add_checkbox_group(self, labels: tuple):
+        checkbox = Checkbox(
+            self.screen,
+            self.nav_rect_bounds.left + 5 + (len(self.buttons) + len(self.checkbox_groups)) * self.offset_x,
+            self.nav_rect_bounds.top + 10 + (len(self.buttons) + len(self.checkbox_groups)) * self.offset_y,
+            self.nav_rect_bounds.width - 10,
+            len(labels) * 25,
+            labels
+        )
+        self.checkbox_groups.append(checkbox)
+        return checkbox
+
     def add_button(self, label, button_callback: Callable[[Any], Any] = None):
         button = Button(
             self.screen,
-            self.nav_rect_bounds.left + 5 + len(self.buttons) * self.offset_x,
-            self.nav_rect_bounds.top + 10 + len(self.buttons) * self.offset_y,
+            self.nav_rect_bounds.left + 5 + (len(self.buttons) + len(self.checkbox_groups)) * self.offset_x,
+            self.nav_rect_bounds.top + 10 + (len(self.buttons) + len(self.checkbox_groups)) * self.offset_y,
             self.nav_rect_bounds.width - 10,
             30,
             shadowDistance=150,
@@ -70,3 +84,6 @@ class SideNav(object):
         for cbutton in self.buttons:
             cbutton.draw_inner()
             cbutton.button.listen(events)
+        for checkbox in self.checkbox_groups:
+            checkbox.draw()
+            checkbox.listen(events)

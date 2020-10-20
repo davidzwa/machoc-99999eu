@@ -1,6 +1,9 @@
-import pygame
 import math
 
+import pygame
+from pygame.rect import Rect
+
+from pygame_widgets.rect import draw_rounded_rect
 from pygame_widgets.widget import WidgetBase
 
 
@@ -30,26 +33,27 @@ class Checkbox(WidgetBase):
         self.selected = [False for _ in range(self.rows)]
 
         # Border
-        self.borderThickness = kwargs.get('borderThickness', 3)
+        self.borderThickness = kwargs.get('borderThickness', 15)
         self.borderColour = kwargs.get('borderColour', (0, 0, 0))
         self.radius = kwargs.get('radius', 0)
 
-        # Checkbox
-        self.boxSize = kwargs.get('boxSize', self.height / self.rows // 3)
-        self.boxThickness = kwargs.get('boxThickness', 3)
+        # Checkbox color and size
+        self.boxSize = kwargs.get('boxSize', self.height / self.rows // 2)
         self.boxColour = kwargs.get('boxColour', (0, 0, 0))
-        # TODO: selected image (tick) / colour
+        self.boxColour2 = kwargs.get('boxColour', (155, 155, 155))
 
-        # Colour
+        # Colour background
         self.colour = kwargs.get('colour', (255, 255, 255))
+        self.colour2 = kwargs.get('colour', (250, 250, 250))
+        self.colour_hover = kwargs.get('colour', (210, 210, 200))
 
         # Alternating colours: overrides colour
         self.colour1 = kwargs.get('colour1', self.colour)
-        self.colour2 = kwargs.get('colour2', self.colour)
+        self.colour2 = kwargs.get('colour2', self.colour2)
 
         # Text
         self.textColour = kwargs.get('textColour', (0, 0, 0))
-        self.fontSize = kwargs.get('fontSize', 20)
+        self.fontSize = kwargs.get('fontSize', 14)
         self.font = kwargs.get('font', pygame.font.SysFont('calibri', self.fontSize))
         self.texts = [self.font.render(self.items[row], True, self.textColour) for row in range(self.rows)]
         self.textRects = self.createTextRects()
@@ -77,10 +81,13 @@ class Checkbox(WidgetBase):
         for row in range(self.rows):
             boxes.append(pygame.Rect(
                 self.x + self.boxSize,
-                self.y + self.rowHeight * row + self.boxSize,
+                self.y + self.rowHeight * row + self.boxSize // 2,
                 self.boxSize, self.boxSize
             ))
         return boxes
+
+    def check_selected(self, index):
+        return self.selected[index]
 
     def listen(self, events):
         """ Wait for inputs
@@ -97,12 +104,12 @@ class Checkbox(WidgetBase):
                     if not self.clicked:
                         self.clicked = True
                         for row in range(self.rows):
-                            if self.boxes[row].collidepoint(x, y):
+                            background_rect = Rect(self.x, self.y + self.rowHeight * row, self.width, self.rowHeight)
+                            if background_rect.collidepoint(x, y):
                                 self.selected[row] = not self.selected[row]
 
                 elif self.clicked:
                     self.clicked = False
-
             elif not pressed:
                 self.clicked = False
 
@@ -110,35 +117,33 @@ class Checkbox(WidgetBase):
         """ Display to surface """
         if not self.hidden:
             for row in range(self.rows):
-                colour = self.colour1 if not row % 2 else self.colour2
-                if row == 0:
-                    pygame.draw.rect(
-                        self.win, colour, (self.x, self.y + self.rowHeight * row, self.width, self.rowHeight),
-                        border_top_left_radius=self.radius, border_top_right_radius=self.radius
-                    )
+                idle_color = self.colour1 if not row % 2 else self.colour2
+                background_rect = Rect(self.x, self.y + self.rowHeight * row, self.width, self.rowHeight)
+                hover = self.check_hover(pygame.mouse.get_pos(), background_rect)
+                draw_rounded_rect(
+                    self.win, self.colour_hover if hover else idle_color, background_rect,
+                    border_radius=self.radius
+                )
 
-                elif row == self.rows - 1:
-                    pygame.draw.rect(
-                        self.win, colour, (self.x, self.y + self.rowHeight * row, self.width, self.rowHeight),
-                        border_bottom_left_radius=self.radius, border_bottom_right_radius=self.radius
-                    )
-
-                else:
-                    pygame.draw.rect(
-                        self.win, colour, (self.x, self.y + self.rowHeight * row, self.width, self.rowHeight)
-                    )
-
-                width = 0 if self.selected[row] else self.boxThickness
-                pygame.draw.rect(
+                draw_rounded_rect(
                     self.win, self.boxColour,
                     self.boxes[row],
-                    width=width
+                    border_radius=1
                 )
+                if self.selected[row]:
+                    draw_rounded_rect(
+                        self.win, self.boxColour2,
+                        self.boxes[row],
+                        border_radius=5
+                    )
 
                 self.win.blit(self.texts[row], self.textRects[row])
 
     def getSelected(self):
         return [self.items[row] for row in range(self.rows) if self.selected[row]]
+
+    def check_hover(self, mouse_pos: tuple, rect: Rect):
+        return rect.contains(Rect(mouse_pos, (1, 1)))
 
 
 class Radio(WidgetBase):
