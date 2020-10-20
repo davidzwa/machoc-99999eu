@@ -1,4 +1,5 @@
 import logging
+from abc import abstractmethod, ABC
 from typing import Callable, Any
 
 import pygame
@@ -10,7 +11,7 @@ from base_gui.gui_components.timeline import Timeline
 from base_gui.utils.reference_frame import vector2_to_int_tuple
 
 
-class Game(object):
+class Game(ABC):
     def __init__(self, size: Vector2):
         self.screen: Surface = None
         self.size = size
@@ -33,7 +34,32 @@ class Game(object):
             logging.ERROR("Should run add_nav_menu before adding buttons.")
         return self.side_menu.add_button(label=label, button_callback=button_callback)
 
-    def add_nav_checkbox_group(self, labels: tuple):
+    def __assert_checkbox(self, group_index, index):
+        assert self.side_menu.checkbox_groups is not None
+        assert self.side_menu.checkbox_groups[group_index] is not None
+        assert self.side_menu.checkbox_groups[group_index].rows > index
+
+    def reset_checkbox(self, group_index, index, state=False):
+        self.__assert_checkbox(group_index, index)
+        self.side_menu.checkbox_groups[group_index].selected[index] = state
+
+    def get_checkbox_value(self, group_index, index):
+        self.__assert_checkbox(group_index, index)
+        return self.side_menu.checkbox_groups[group_index].selected[index]
+
+    @abstractmethod
+    def add_nav_checkboxgroup_specific(self, sim_labels: tuple):
+        """
+        Enforce the inheritee to implement this, increasing understanding of the menu build-up
+        """
+        pass
+        # Example
+        # self.side_menu.clear_checkbox_groups()
+        # self.add_nav_checkboxgroup_generic(MENU_CHECKBOXES_GENERIC)
+        # self.add_nav_checkboxgroup_generic(sim_labels)
+
+    def add_nav_checkboxgroup_generic(self, labels: tuple):
+        assert len(labels) > 0
         if self.side_menu is None:
             logging.ERROR("Should run add_nav_menu before adding buttons.")
         return self.side_menu.add_checkbox_group(labels)

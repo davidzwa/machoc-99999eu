@@ -1,10 +1,12 @@
 from pygame import Vector2
 from pygame.rect import Rect
 
-PIXELS_PER_METER = 20
 
 
 # This function serves as reference frame scaling (pixels/meter)
+from base_gui.constants import PIXELS_PER_METER
+
+
 def scale_pixels_to_meters(value, reverse=False):
     if not reverse:
         return value / PIXELS_PER_METER
