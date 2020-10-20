@@ -66,7 +66,7 @@ class Message(object):
         """
         Check if message has travelled beyond furthest point (max range)
         """
-        return self.max_range < self.prop_distance + self.prop_packet_length
+        return self.max_range < self.prop_distance
 
     # def __del__(self):
     #     pass
