@@ -1,4 +1,5 @@
 import logging
+import random
 from typing import Any
 
 import pygame
@@ -10,6 +11,7 @@ from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, SimType, SimCon
     MENU_CHECKBOX_SIMTYPE_INDEX
 from base_gui.simulation.gui_sim_mac import GuiSimMac
 from base_gui.simulation.gui_sim_routing import GuiSimRouting
+from base_gui.utils.reference_frame import translate_global_to_local, scale_tuple_pix2meter
 
 
 def start_simulation(payload: Any):
@@ -30,6 +32,7 @@ def construct_simulation(simulation_type: SimType):
             Vector2(simulation_window_rect.midbottom[0] - 150, simulation_window_rect.midbottom[1] - 100),
             Vector2(300, 10)
         )
+        guiSimMac.add_wavefront()
         guiSimMac.generate_nodes_multivariate(SimConsts.NUM_NODES_MAC, SimConsts.DISTANCE_SPREAD_SIGMA_MAC)
         return guiSimMac
     else:
@@ -76,6 +79,8 @@ while not game_quit:
         guiSim.reset_checkbox(0, MENU_CHECKBOX_SIMTYPE_INDEX, False)
         logging.info("Switched to MAC simulator.")
         current_sim_type = SimType.MAC
+        sliderVal = guiSim.timeline.nodes_slider.getValue()
+        last_num_nodes = sliderVal
     elif guiSim.get_checkbox_value(0, MENU_CHECKBOX_SIMTYPE_INDEX) \
             and current_sim_type is not SimType.ROUTING:
         guiSim = guiSimRouting
@@ -83,13 +88,8 @@ while not game_quit:
         guiSim.reset_checkbox(0, MENU_CHECKBOX_SIMTYPE_INDEX, True)
         logging.info("Switched to ROUTING simulator.")
         current_sim_type = SimType.ROUTING
-
-    ### PROCESS
-    # mouse_global_pixels = pygame.mouse.get_pos()
-    # if mouse_in_frame(mouse_global_pixels, simulation_window_rect):
-    #     mouse_local_pixels = translate_global_to_local(mouse_global_pixels, simulation_window_rect, simulation_origin)
-    #     mouse_local_meters = scale_tuple_pix2meter(mouse_local_pixels)
-    #     wave.adjust_origin_local(mouse_local_meters)  # Relative positioning
+        sliderVal = guiSim.timeline.nodes_slider.getValue()
+        last_num_nodes = sliderVal
 
     guiSim.timeline.nodes_slider.listen(events)
     guiSim.timeline.time_slider.listen(events)
@@ -101,7 +101,6 @@ while not game_quit:
 
     ### RENDER
     guiSim.screen.fill((245, 245, 245))
-    guiSim.timeline.render()
 
     # RENDER - Update text by grabbing guiSim children
     font_surface = guiSim.font.render("Number of nodes: {} ".format(sliderVal), True, pygame.Color("black"))
@@ -109,8 +108,20 @@ while not game_quit:
     font_surface = guiSim.font.render("Current time: {} sec".format(timeVal), True, pygame.Color("black"))
     guiSim.screen.blit(font_surface, dest=(guiSim.timeline.time_slider.x, guiSim.timeline.time_slider.y + 20))
 
-    # RENDER - Nodes and menu
+    ### PROCESS mouse & RENDER WAVE and NODES
+    if current_sim_type is SimType.MAC:
+        # mouse_global_pixels = pygame.mouse.get_pos()
+        # if mouse_in_frame(mouse_global_pixels, guiSim.sim_rect):
+        #     mouse_local_pixels = translate_global_to_local(mouse_global_pixels, guiSim.sim_rect, guiSim.local_origin)
+        #     mouse_local_meters = scale_tuple_pix2meter(mouse_local_pixels)
+
+        random_position = random.choice(guiSimMac.node_positions)
+        guiSimMac.wave.adjust_origin_local(random_position)  # Relative positioning
+        guiSimMac.render_wave()
     guiSim.render_datanodes()
+
+    # RENDER - Nodes and menu
+    guiSim.timeline.render()
     guiSim.side_menu.render_nav_backlight()
     guiSim.side_menu.render(events)
     pygame.display.update()
