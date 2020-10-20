@@ -21,7 +21,7 @@ class SimType(enum.Enum):
     MAC = 0
     ROUTING = 1
 
-PIXELS_PER_METER = 20 # Might become dynamic based on zoom later
+PIXELS_PER_METER = 10 # Might become dynamic based on zoom later
 SIM_MODE = SimType.MAC  # Not implemented
 NAV_WIDTH = 200
 BOTTOM_HEIGHT = 0

@@ -1,6 +1,6 @@
 import numpy as np
 import pygame
-from pygame import gfxdraw, SRCALPHA, BLEND_ADD, Surface
+from pygame import gfxdraw, SRCALPHA, BLEND_ADD, Surface, Vector2
 from pygame.rect import Rect
 
 from base_gui.utils.reference_frame import scale_tuple_pix2meter, translate_global_to_local
@@ -13,7 +13,7 @@ class Wave(object):
     def __init__(self,
                  screen: Surface,
                  bounds_rect: Rect,
-                 local_origin_offset: pygame.Vector2,
+                 local_origin_offset: Vector2,
                  radius_max,
                  radius_step):
         assert screen is not None
@@ -31,7 +31,7 @@ class Wave(object):
         self.width = 5
         self.filled = False
         self.color = np.array([120, 120, 120])
-        for i in range(1, self.radius_max_meters * self.radius_step_pixels, self.radius_step_pixels):
+        for i in range(50, self.radius_max_meters * self.radius_step_pixels, self.radius_step_pixels):
             self.draw_wave_circle(i)
 
     def draw_wave_circle(self, radius):

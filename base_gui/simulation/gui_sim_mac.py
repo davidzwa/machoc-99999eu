@@ -11,11 +11,10 @@ from base_gui.simulation.wave import Wave
 
 
 class GuiSimMac(Game):
-    node_positions: np.ndarray
-    data_nodes: list
-
     def __init__(self, game_size: Vector2, sim_rect, local_origin):
         super(GuiSimMac, self).__init__(game_size)
+        self.node_positions: np.ndarray
+        self.data_nodes: list
 
         self.sim_rect = sim_rect
         self.local_origin = local_origin
@@ -49,8 +48,9 @@ class GuiSimMac(Game):
             self.data_nodes.append((dot_node))
 
     def add_wavefront(self):
-        self.wave = Wave(self.screen, self.sim_rect, self.local_origin, 50,
-                         PIXELS_PER_METER)  # Static/doesnt scale like this
+        self.wave = Wave(self.screen,
+                         self.sim_rect, self.local_origin,
+                         30, PIXELS_PER_METER)  # Static/doesnt scale like this
 
     def add_nav_checkboxgroup_specific(self, sim_labels: tuple = MENU_CHECKBOXES_MAC):
         """
