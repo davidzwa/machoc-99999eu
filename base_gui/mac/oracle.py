@@ -28,7 +28,9 @@ class Oracle(object):
     def preprocess(self,
                    time_steps: int,
                    delta_time: int,
-                   transmission_chance: float, transmission_range: float, regenerate: bool = True):
+                   transmission_chance: float,
+                   transmission_range: float, packet_length: int,
+                   regenerate: bool = True):
         self.transmission_chance = transmission_chance
         self.actor_range = transmission_range
         # Create empty actors
@@ -69,14 +71,16 @@ class Oracle(object):
         # - Increment time (by delta)
         for time_index in range(0, self.time_steps):
             # 1) Generate new clock value and find the precalculated random transmitting actors
-            current_time = time_index * self.delta_time
             transmitting_actor_indices = np.where(self.timenode_istransmitting_random[time_index] == 1)
             # 2) Update nodes with outstanding 'tranmission'
             for transmitting_actor_index in transmitting_actor_indices[0]:
-                self.actors[transmitting_actor_index].attempt_transmission(max_transmission_range=transmission_range)
+                self.actors[transmitting_actor_index].attempt_transmission(
+                    max_transmission_range=transmission_range,
+                    packet_length=packet_length
+                )
             # 3) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
             for actor in self.actors:
-                actor.progress_time(current_time)
+                actor.progress_time(self.delta_time)
             # - Update any nodes with outstanding 'arrivals' or their own 'dead messages'
             # for i, actor in enumerate(self.actors):
             #     actor.
@@ -94,4 +98,5 @@ class Oracle(object):
 if __name__ == '__main__':
     oracle = Oracle(num_nodes=20, positional_spread=100.0)
     oracle.preprocess(time_steps=500, delta_time=1,
-                      transmission_chance=0.05, transmission_range=13.5)
+                      packet_length=5, transmission_range=80,
+                      transmission_chance=0.05)

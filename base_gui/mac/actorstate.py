@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 
-from base_gui.mac.message import Message
+from base_gui.mac.message import Message, MESSAGE_DISTANCE_PER_TIME
 
 
 class State(Enum):
@@ -61,9 +61,19 @@ class ActorState(object):
                     return True
         return False
 
-    def progress_actorstate_time(self, time):
+    def progress_actorstate_time(self, delta_time):
+        outofrange_messages = list()
+        for message in self.in_transit_messages:
+            message.prop_distance += delta_time / MESSAGE_DISTANCE_PER_TIME
+            if message.check_message_done():
+                outofrange_messages.append(message)
         # Convert time to find new distance of message: head of wave
-        self.time = time
+        self.time += delta_time
+        self.purge_outofrange_messages(outofrange_messages)
 
-    def purge_outofrange_messages(self):
-        self.in_transit_messages = [message for message in self.in_transit_messages if not message.check_message_done()]
+    def purge_outofrange_messages(self, done_messages):
+        for message in done_messages:
+            print("Deleted message at time {} with prop. distance {} [m].".format(self.time, message.get_distance_travelled()))
+            self.in_transit_messages.remove(message)
+
+

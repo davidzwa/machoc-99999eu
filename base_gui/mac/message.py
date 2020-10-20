@@ -34,8 +34,11 @@ class Message(object):
         self.origin_position = origin
         self.prop_distance = 0.0  # Current head of wave, dynamic
 
-    def message_travel(self, distance = MESSAGE_DISTANCE_PER_TIME):
-        self.prop_distance += distance
+    def message_travel(self, delta_distance):
+        self.prop_distance += delta_distance
+
+    def get_distance_travelled(self):
+        return self.prop_distance
 
     def check_tail_beyond_receiver(self, actor_position):
         """
@@ -64,3 +67,7 @@ class Message(object):
         Check if message has travelled beyond furthest point (max range)
         """
         return self.max_range < self.prop_distance + self.prop_packet_length
+
+    # def __del__(self):
+    #     pass
+        # print("Im losing it.")
