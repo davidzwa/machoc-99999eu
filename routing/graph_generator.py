@@ -96,21 +96,30 @@ class GraphGenerator(FigureCanvas):
             result.append(node.key)
         return result
 
+    def add_one_node(self):
+        self.nodes.append(self.add_node(1, self.window_width, 1, self.window_height))
+
+    def add_node(self, min_x, max_x, min_y, max_y):
+        x = random.randint(min_x, max_x)
+        y = random.randint(min_y, max_y)
+        return Node(len(self.nodes), x, y)
+
     def create_nodes(self):
         self.nodes = self.get_nodes(
             self.node_count, 1, self.window_width, 1, self.window_height)
 
-    def draw_next(self):
-        self.get_next_step()
+    def draw_next(self, step=True):
+        self.get_next_step(step)
 
-    def get_next_step(self):
+    def get_next_step(self, step=True):
         self.graph.clear()
         self.axes.cla()
         plt.clf()
 
         # Add nodes and edges
-        self.nodes = self.get_nodes_step(
-            self.nodes, self.max_x_displacement, self.max_y_displacement)
+        if step:
+            self.nodes = self.get_nodes_step(
+                self.nodes, self.max_x_displacement, self.max_y_displacement)
         self.edges, self.edge_distances = self.get_edges(
             self.nodes, self.max_edge_distance)
 

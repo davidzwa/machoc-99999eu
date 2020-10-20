@@ -48,12 +48,15 @@ class MainWindow(QMainWindow):
 
         self.create_button = QPushButton('Create nodes', self)
         self.create_button.clicked.connect(self.create_nodes)
+        self.add_node_button = QPushButton('Add one node', self)
+        self.add_node_button.clicked.connect(self.add_node)
         self.start_simulation_button = QPushButton('Start simulation', self)
         self.start_simulation_button.clicked.connect(self.start_simulation)
         self.stop_simulation_button = QPushButton('Stop simulation', self)
         self.stop_simulation_button.clicked.connect(self.stop_simulation)
         hlay2 = QHBoxLayout()
         hlay2.addWidget(self.create_button)
+        hlay2.addWidget(self.add_node_button)
         hlay2.addWidget(self.start_simulation_button)
         hlay2.addWidget(self.stop_simulation_button)
         hlay2.addItem(QSpacerItem(1000, 10, QSizePolicy.Expanding))
@@ -73,6 +76,11 @@ class MainWindow(QMainWindow):
         self.graph.set_node_count(number_of_nodes)
         self.graph.create_nodes()
         self.graph.draw_next()
+
+    def add_node(self):
+        self.graph.node_count += 1
+        self.graph.add_one_node()
+        self.graph.draw_next(step=False)
 
     def start_simulation(self):
         def step():
