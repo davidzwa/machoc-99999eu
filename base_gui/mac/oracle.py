@@ -41,7 +41,7 @@ class Oracle(object):
             self.node_positions_np = self.__generate_positions(self.num_nodes, self.positional_spread)
             for i, position in enumerate(self.node_positions_np):
                 identifier = "N{}".format(i)
-                self.actors.append(Actor(identifier, self.transmission_chance, position))
+                self.actors.append(Actor(identifier, position))
             # - random positions
 
         # - calculate neighbours to nodes based on transmission range cutoff
@@ -67,18 +67,20 @@ class Oracle(object):
 
         # Simulate each timestep
         # - Increment time (by delta)
-        for time in range(0, self.time_steps):
-            current_time = time * self.delta_time
-            transmitting_actor_indices = np.where(self.timenode_istransmitting_random[time] == 1)
-            for transmitting_actor in transmitting_actor_indices:
-            # - Update nodes with outstanding 'tranmission action' and drop out-of-range messages
-            # for
-
-            # - loop over each node
-            #       1) Throw transmission dice (call decide_transmission if valid for this node)
-            #       2) Exchange new or existing transmissions (reduce counter on each)changing state
-            #       3) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
-
+        for time_index in range(0, self.time_steps):
+            # 1) Generate new clock value and find the precalculated random transmitting actors
+            current_time = time_index * self.delta_time
+            transmitting_actor_indices = np.where(self.timenode_istransmitting_random[time_index] == 1)
+            # 2) Update nodes with outstanding 'tranmission'
+            for transmitting_actor_index in transmitting_actor_indices[0]:
+                self.actors[transmitting_actor_index].attempt_transmission(max_transmission_range=transmission_range)
+            # 3) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
+            for actor in self.actors:
+                actor.progress_time(current_time)
+            # - Update any nodes with outstanding 'arrivals' or their own 'dead messages'
+            # for i, actor in enumerate(self.actors):
+            #     actor.
+        pass
         # Store (optional)
         # - store as JSON with parameters
 
