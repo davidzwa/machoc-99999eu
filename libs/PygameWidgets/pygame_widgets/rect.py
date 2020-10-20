@@ -9,9 +9,9 @@ def draw_rounded_rect(surface, color, rect, border_radius):
 
     We use anti-aliased circles to make the corners smoother
     '''
-    if rect.width < 2 * border_radius or rect.height < 2 * border_radius:
-        raise ValueError(
-            f"Both height (rect.height) and width (rect.width) must be > 2 * corner radius ({border_radius})")
+    # if rect.width < 2 * border_radius or rect.height < 2 * border_radius:
+    #     raise ValueError(
+    #         f"Both height (rect.height) and width (rect.width) must be < 2 * corner radius ({border_radius})")
 
     # need to use anti aliasing circle drawing routines to smooth the corners
     pygame.gfxdraw.aacircle(surface, rect.left + border_radius, rect.top + border_radius, border_radius, color)

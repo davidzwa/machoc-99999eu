@@ -34,14 +34,17 @@ class GuiSim(Game):
         """
         self.node_positions = node_positions_np
         self.data_nodes = list()
+        indexer = 0
         for node_pos in node_positions_np:
+            indexer+=1
             dot_node = Node(position_meters=Vector2(tuple(node_pos)),
                             reference_frame=self.sim_rect,
                             screen=self.screen,
                             local_origin=self.local_origin,
-                            color=pygame.Color("red"))
+                            color=pygame.Color("red"),
+                            node_title="N{}".format(indexer))
             self.data_nodes.append((dot_node))
 
-    def render_datanodes(self):
+    def render_datanodes(self, disable_node_titles = False):
         for sim_node in self.data_nodes:
-            sim_node.render()
+            sim_node.render(disable_node_titles)

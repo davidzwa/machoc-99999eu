@@ -4,14 +4,10 @@ import pygame
 from pygame import Vector2
 
 from base_gui.app_logging import LOGGER
-from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, NUM_NODES, DISTANCE_SPREAD_SIGMA
+from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, NUM_NODES, DISTANCE_SPREAD_SIGMA, MENU_CHECKBOXES
 from base_gui.simulation.gui_sim import GuiSim
 from base_gui.simulation.wave import Wave
 from base_gui.utils.reference_frame import translate_global_to_local, scale_tuple_pix2meter, PIXELS_PER_METER
-
-
-def menu_item_clicked(payload: Any):
-    LOGGER.info('main menu button clicked')
 
 
 def start_simulation(payload: Any):
@@ -30,12 +26,13 @@ simulation_origin = Vector2(int(SIM_SIZE.x / 2), int(SIM_SIZE.y / 2))
 
 guiSim = GuiSim(SCREEN_SIZE, simulation_window_rect, simulation_origin)
 guiSim.create_game()
-guiSim.add_nav_menu()
 guiSim.add_nav_button(label="Simulate", button_callback=start_simulation)
 guiSim.add_nav_button(label="Stop", button_callback=None)
 guiSim.add_nav_button(label="Reset", button_callback=None)
+menu_checkboxes = guiSim.add_nav_checkbox_group(MENU_CHECKBOXES)
+
 guiSim.add_timeline(
-    Vector2(simulation_window_rect.midbottom[0]-150, simulation_window_rect.midbottom[1]-100),
+    Vector2(simulation_window_rect.midbottom[0] - 150, simulation_window_rect.midbottom[1] - 100),
     Vector2(300, 10)
 )
 guiSim.generate_nodes_multivariate(NUM_NODES, DISTANCE_SPREAD_SIGMA)
@@ -76,7 +73,7 @@ while not crashed:
     guiSim.screen.blit(font_surface, dest=(guiSim.timeline.time_slider.x, guiSim.timeline.time_slider.y + 20))
 
     # RENDER - Nodes and menu
-    guiSim.render_datanodes()
+    guiSim.render_datanodes(disable_node_titles=not menu_checkboxes.check_selected(0))
     guiSim.side_menu.render_nav_backlight()
     guiSim.side_menu.render(events)
     pygame.display.update()
