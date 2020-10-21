@@ -3,11 +3,11 @@ from typing import List
 
 import numpy as np
 
-from base_gui.mac.actorstate import ActorState
+from base_gui.mac.actorstate import ActorState, FrozenActorState
 from base_gui.mac.message import Message, MessageType, MESSAGE_DISTANCE_PER_TIME
 
 
-class Actor(object):
+class ActorStateHistory(object):
     def __init__(
             self,
             identifier: str,
@@ -16,20 +16,20 @@ class Actor(object):
 
         self.identifier = identifier
         self.position: np.ndarray = position
-        # self.neighbours: List[Actor] = list()
 
         if state is None:
             self.state: ActorState = ActorState(identifier, 0.0)
         else:
             self.state = state
-        self.history: List[ActorState] = list()
+        self.history: List[FrozenActorState] = list()
 
     def add_neighbour(self, neighbour_state: ActorState):
         self.state.add_neighbour_state(neighbour_state)
+        pass
 
-    def clear_state(self):
-        self.state: ActorState = ActorState(self.identifier, 0.0)
-        self.history = list()
+    def save_state_to_history(self):
+        frozen_state: FrozenActorState = self.state.get_frozen_state(self.position)
+        self.history.append(frozen_state)
 
     def attempt_transmission(self, max_transmission_range=100 * MESSAGE_DISTANCE_PER_TIME,
                              packet_length=10 * MESSAGE_DISTANCE_PER_TIME):
