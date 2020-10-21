@@ -27,10 +27,6 @@ class ActorStateHistory(object):
         self.state.add_neighbour_state(neighbour_state)
         pass
 
-    def clear_state(self):
-        self.state: ActorState = ActorState(self.identifier, 0.0)
-        self.history = list()
-
     def save_state_to_history(self):
         frozen_state: FrozenActorState = self.state.get_frozen_state(self.position)
         self.history.append(frozen_state)

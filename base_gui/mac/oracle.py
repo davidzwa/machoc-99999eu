@@ -57,14 +57,15 @@ class Oracle(object):
                 if dist < transmission_range:
                     actor.add_neighbour(neighbour_actor.state)
                     neighbour_actor.add_neighbour(actor.state)
-            actor.clear_state()
 
         check_actor = self.actors[0]
         for neighbour_actor_state in check_actor.state.neighbour_states:
+            state_found = False
             for neighbour in self.actors:
                 if neighbour_actor_state is neighbour.state:
-                    break
-            raise Exception("Neighbour {} state in actor's list of neighbours was dereferenced.".format(neighbour_actor_state.identifier))
+                    state_found = True
+            if state_found is False:
+                raise Exception("Neighbour {} state in actor's list of neighbours was dereferenced.".format(neighbour_actor_state.identifier))
 
         # Init sim
         # - Calculate time division: number of time-sliced atomic events
