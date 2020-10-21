@@ -1,15 +1,32 @@
+import uuid
 from enum import Enum
 from typing import Any
 
+import attr
 import numpy as np
 
-MESSAGE_DISTANCE_PER_TIME = 1.0 # One distance unit per time unit
+MESSAGE_DISTANCE_PER_TIME = 1.0  # One distance unit per time unit
+
 
 class MessageType(Enum):
     DATA = 0,
     CTS = 1,
     RTS = 2,
     ACK = 3
+
+
+@attr.attrs(auto_attribs=True, frozen=True)
+class ImmutableMessage(object):
+    """
+    Freeze a message to save it to history
+    """
+    prop_packet_length: float = attr.attrib()
+    origin_position: np.ndarray
+    # Any metadata required for proper functioning of the MAC layer. For example: RTS/CTS+data length window
+    payload: uuid.UUID
+    max_range: float
+    type: MessageType
+    prop_distance: float
 
 
 class Message(object):
@@ -36,6 +53,16 @@ class Message(object):
 
     def message_travel(self, delta_distance):
         self.prop_distance += delta_distance
+
+    def get_immutable_message(self):
+        return ImmutableMessage(
+            self.prop_packet_length,
+            self.origin_position,
+            self.payload,
+            self.max_range,
+            self.type,
+            self.prop_distance
+        )
 
     def get_distance_travelled(self):
         return self.prop_distance
@@ -70,4 +97,4 @@ class Message(object):
 
     # def __del__(self):
     #     pass
-        # print("Im losing it.")
+    # print("Im losing it.")

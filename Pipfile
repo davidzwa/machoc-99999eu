@@ -11,6 +11,7 @@ rope = "*"
 pygame = "*"
 numpy = "*"
 matplotlib = "*"
+attrs = "*"
 
 [requires]
 python_version = "3.7"

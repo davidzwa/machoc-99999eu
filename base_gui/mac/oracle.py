@@ -2,13 +2,14 @@ from typing import List
 
 import numpy as np
 
-from base_gui.mac.actor import Actor
+from base_gui.mac.actorstatehistory import ActorStateHistory
+from base_gui.mac.actorstate import FrozenActorState
 
 
 class Oracle(object):
     def __init__(self, num_nodes: int, positional_spread: float):
         self.node_positions_np = None
-        self.actors: List[Actor] = list()
+        self.actors: List[ActorStateHistory] = list()
         self.current_time = 0
         self.num_nodes = num_nodes
         self.positional_spread = positional_spread
@@ -22,7 +23,7 @@ class Oracle(object):
         return np.random.multivariate_normal(mean, cov, num_nodes)
 
     @staticmethod
-    def __calc_actor_distances(actor1: Actor, actor2: Actor):
+    def __calc_actor_distances(actor1: ActorStateHistory, actor2: ActorStateHistory):
         return np.linalg.norm(actor1.position - actor2.position)
 
     def preprocess(self,
@@ -43,7 +44,7 @@ class Oracle(object):
             self.node_positions_np = self.__generate_positions(self.num_nodes, self.positional_spread)
             for i, position in enumerate(self.node_positions_np):
                 identifier = "N{}".format(i)
-                self.actors.append(Actor(identifier, position))
+                self.actors.append(ActorStateHistory(identifier, position))
             # - random positions
 
         # - calculate neighbours to nodes based on transmission range cutoff
@@ -73,7 +74,7 @@ class Oracle(object):
             # 1) Generate new clock value and find the precalculated random transmitting actors
             transmitting_actor_indices = np.where(self.timenode_istransmitting_random[time_index] == 1)
             # 2) Update nodes with outstanding 'tranmission'
-            for transmitting_actor_index in transmitting_actor_indices[0]:
+            for transmitting_actor_index in transmitting_actor_indices[0]: # TODO WHY [0] instead of direct iter
                 self.actors[transmitting_actor_index].attempt_transmission(
                     max_transmission_range=transmission_range,
                     packet_length=packet_length
@@ -81,6 +82,8 @@ class Oracle(object):
             # 3) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
             for actor in self.actors:
                 actor.progress_time(self.delta_time)
+            for actor in self.actors:
+                actor.save_state_to_history()
             # - Update any nodes with outstanding 'arrivals' or their own 'dead messages'
             # for i, actor in enumerate(self.actors):
             #     actor.
@@ -100,3 +103,9 @@ if __name__ == '__main__':
     oracle.preprocess(time_steps=500, delta_time=1,
                       packet_length=5, transmission_range=80,
                       transmission_chance=0.15)
+
+    for actor in oracle.actors:
+        state: FrozenActorState
+        print(len(actor.history))
+        # for state in actor.history:
+        #     print(len(state.queued_messages))
