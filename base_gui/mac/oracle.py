@@ -53,8 +53,8 @@ class Oracle(object):
             for neighbour_actor in copy_actors:
                 dist = self.__calc_actor_distances(actor, neighbour_actor)
                 if dist < transmission_range:
-                    actor.add_neighbour(neighbour_actor)
-                    neighbour_actor.add_neighbour(actor)
+                    actor.add_neighbour(neighbour_actor.state)
+                    neighbour_actor.add_neighbour(actor.state)
             actor.clear_state()
 
         # Init sim
@@ -99,4 +99,4 @@ if __name__ == '__main__':
     oracle = Oracle(num_nodes=20, positional_spread=100.0)
     oracle.preprocess(time_steps=500, delta_time=1,
                       packet_length=5, transmission_range=80,
-                      transmission_chance=0.05)
+                      transmission_chance=0.15)
