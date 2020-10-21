@@ -15,6 +15,7 @@ class Oracle(object):
         self.positional_spread = positional_spread
 
         self.timenode_istransmitting_poisson: np.ndarray  # dtype=ActorState
+        self.sim_history: np.ndarray
 
     @staticmethod
     def __generate_positions(num_nodes: int, cov_diag: float):
@@ -26,12 +27,19 @@ class Oracle(object):
     def __calc_actor_distances(actor1: ActorStateHistory, actor2: ActorStateHistory):
         return np.linalg.norm(actor1.position - actor2.position)
 
+    def generate_actors(self):
+        self.actors = list()
+        self.node_positions_np = self.__generate_positions(self.num_nodes, self.positional_spread)
+        for i, position in enumerate(self.node_positions_np):
+            identifier = "N{}".format(i)
+            self.actors.append(ActorStateHistory(identifier, position))
+
     def preprocess(self,
                    time_steps: int,
                    delta_time: int,
                    transmission_chance: float,
                    transmission_range: float, packet_length: int,
-                   regenerate: bool = True):
+                   regenerate_positions: bool = False):
         self.transmission_chance = transmission_chance
         self.actor_range = transmission_range
         # Create empty actors
@@ -39,12 +47,9 @@ class Oracle(object):
         # - provide transmission rate 'lambda'
         # Init nodes
         # - assign valid/separated random 2D position
-        assert len(self.actors) != 0 or regenerate is True
-        if regenerate is True:
-            self.node_positions_np = self.__generate_positions(self.num_nodes, self.positional_spread)
-            for i, position in enumerate(self.node_positions_np):
-                identifier = "N{}".format(i)
-                self.actors.append(ActorStateHistory(identifier, position))
+        assert len(self.actors) != 0 or regenerate_positions is True
+        if regenerate_positions is True:
+            self.generate_actors()
 
         # - calculate neighbours to nodes based on transmission range cutoff
         # - set IDLE state to each node
@@ -63,7 +68,8 @@ class Oracle(object):
                 if neighbour_actor_state is neighbour.state:
                     state_found = True
             if state_found is False:
-                raise Exception("Neighbour {} state in actor's list of neighbours was dereferenced.".format(neighbour_actor_state.identifier))
+                raise Exception("Neighbour {} state in actor's list of neighbours was dereferenced.".format(
+                    neighbour_actor_state.identifier))
 
         # Init sim
         # - Calculate time division: number of time-sliced atomic events
@@ -94,7 +100,12 @@ class Oracle(object):
             # 4) Save state
             for actor in self.actors:
                 actor.save_state_to_history()
-        pass
+        # Flatten result
+        self.sim_history = np.empty((self.time_steps, self.num_nodes), dtype=FrozenActorState)
+        for index, actor in enumerate(self.actors):
+            for time_index, time_actorstate in enumerate(actor.history):
+                self.sim_history[time_index][index] = time_actorstate
+        print("Simulation resulted in {} states stored in 'sim_history'".format(self.sim_history.size))
 
         # Store (optional)
         # - store as JSON with parameters
@@ -107,10 +118,13 @@ class Oracle(object):
 
 
 if __name__ == '__main__':
-    oracle = Oracle(num_nodes=20, positional_spread=5000.0)
+    oracle = Oracle(num_nodes=5, positional_spread=5000.0)
+    oracle.generate_actors()
     oracle.preprocess(time_steps=500, delta_time=1,
                       packet_length=5, transmission_range=60,
-                      transmission_chance=0.15)
-    for actor in oracle.actors:
-        for state in actor.history:
-            print(len(state.queued_messages))
+                      transmission_chance=0.15,
+                      regenerate_positions=False)
+    # for actor in oracle.actors:
+    # for state in actor.history:
+    #     print(len(state.queued_messages))
+    print("Oracle done simulating.")

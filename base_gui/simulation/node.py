@@ -1,8 +1,12 @@
+from typing import List
+
 import pygame
 from pygame import Vector2, Surface, gfxdraw
 from pygame.rect import Rect
 
-from base_gui.utils.reference_frame import vector2_global_to_local
+from base_gui.constants import SimConsts
+from base_gui.simulation.wave import Wave
+from base_gui.utils.reference_frame import vector2_global_to_local, scale_tuple_pix2meter
 
 
 class Node(object):
@@ -28,21 +32,54 @@ class Node(object):
         self.font = pygame.font.Font(pygame.font.get_default_font(), 11)
         self.node_title = node_title
 
-    def render(self, disable_node_title=False):
-        global_vector = vector2_global_to_local(
+        self.waves: List[Wave] = list()
+
+        self.global_position = vector2_global_to_local(
             self.position_meters,
             self.reference_frame,
             self.local_origin_offset,
             True)
+
+    def set_wavefronts(self, wave_specs: List[Vector2]):
+        """
+        Visualize multiple in-transit message wavefronts.
+        Each Vector2 contains 2 distances: min,max wave-distance to shape the donut
+        """
+
+        # Iterate wave_specs
+        self.waves = list()
+        for minmax_donut in wave_specs:
+            assert minmax_donut[1] >= 0
+            if minmax_donut == 0:
+                continue
+            minmax_donut = scale_tuple_pix2meter(minmax_donut, reverse=True)
+            if minmax_donut[0] > 0:
+                self.add_wavefront(minmax_donut[0], minmax_donut[1])
+            else:
+                self.add_wavefront(0, minmax_donut[1])
+
+    def add_wavefront(self, min_radius, max_radius):
+        self.waves.append(
+            Wave(self.screen,
+                 min_radius, max_radius, SimConsts.WAVES_DENSITY,
+                 global_position=self.global_position)
+        )
+
+    def render(self, disable_node_title=False):
         if disable_node_title is False:
             self.font_surface = self.font.render(self.node_title, True, pygame.Color("black"))
-            self.screen.blit(self.font_surface, dest=(global_vector.x + 5, global_vector.y - 10))
+            self.screen.blit(self.font_surface, dest=(self.global_position[0] + 5, self.global_position[1] - 10))
         pygame.gfxdraw.aacircle(self.screen,
-                                int(global_vector.x), int(global_vector.y),
+                                int(self.global_position[0]), int(self.global_position[1]),
                                 self.__radius,
                                 self.color)
         pygame.gfxdraw.filled_circle(self.screen,
-                                     int(global_vector.x),
-                                     int(global_vector.y),
+                                     int(self.global_position[0]),
+                                     int(self.global_position[1]),
                                      self.__radius,
                                      self.color)
+
+    def render_waves(self):
+        assert self.waves is not None
+        for wave in self.waves:
+            wave.render()

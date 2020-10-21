@@ -27,6 +27,7 @@ class State(Enum):
 @attr.attrs(auto_attribs=True, frozen=True)
 class FrozenActorState(object):
     state: State
+    identifier: str
     neighbour_messages_carriersense: typing.Tuple[ImmutableMessage]
     queued_messages: typing.Tuple[ImmutableMessage]
     in_transit_messages: typing.Tuple[ImmutableMessage]
@@ -68,6 +69,7 @@ class ActorState(object):
             frozen_neighbour_items.append(neighbour_message.get_immutable_message())
         return FrozenActorState(
             state=self.state,
+            identifier=self.identifier,
             queued_messages=tuple(frozen_queue_items),
             in_transit_messages=tuple(frozen_transit_items),
             neighbour_messages_carriersense=tuple(frozen_neighbour_items)

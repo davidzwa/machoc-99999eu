@@ -25,8 +25,8 @@ def translate_global_to_local(position: tuple, reference_frame_rect: Rect, local
         return (position[0] - int(local_origin.x) - reference_frame_rect.left,
                 position[1] - int(local_origin.y) - reference_frame_rect.top)
     else:
-        return (position[0] + int(local_origin.x) + reference_frame_rect.left,
-                position[1] + int(local_origin.y) + reference_frame_rect.top)
+        return (int(position[0] + local_origin.x + reference_frame_rect.left),
+                int(position[1] + local_origin.y + reference_frame_rect.top))
 
 
 def vector2_global_to_local(vector: Vector2, reference_frame_rect, local_origin_offset, reverse: bool = False):
@@ -39,7 +39,7 @@ def vector2_global_to_local(vector: Vector2, reference_frame_rect, local_origin_
         pos = (vector.x, vector.y)
         pos_scaled = scale_tuple_pix2meter(pos, True)
         pos_scaled_global = translate_global_to_local(pos_scaled, reference_frame_rect, local_origin_offset, True)
-        return Vector2(pos_scaled_global)
+        return (pos_scaled_global[0], pos_scaled_global[1])
 
 
 def vector2_to_int_tuple(vector: Vector2) -> tuple:
