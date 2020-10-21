@@ -25,6 +25,7 @@ class ActorStateHistory(object):
 
     def add_neighbour(self, neighbour_state: ActorState):
         self.state.add_neighbour_state(neighbour_state)
+        pass
 
     def clear_state(self):
         self.state: ActorState = ActorState(self.identifier, 0.0)

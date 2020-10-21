@@ -102,7 +102,6 @@ class ActorState(object):
                 # It would be illegal to find neighbour messages except for the ones 'arriving'
                 if message.check_message_arriving(actor_position):
                     arriving_messages.append(message)
-
         return arriving_messages
 
     def check_message_carriersense(self, actor_position):

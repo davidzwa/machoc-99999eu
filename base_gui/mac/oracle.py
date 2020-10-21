@@ -2,8 +2,8 @@ from typing import List
 
 import numpy as np
 
-from base_gui.mac.actorstatehistory import ActorStateHistory
 from base_gui.mac.actorstate import FrozenActorState
+from base_gui.mac.actorstatehistory import ActorStateHistory
 
 
 class Oracle(object):
@@ -20,7 +20,7 @@ class Oracle(object):
     def __generate_positions(num_nodes: int, cov_diag: float):
         mean = [0, 0]
         cov = [[cov_diag, 0], [0, cov_diag]]  # Spherical distribution
-        return np.random.multivariate_normal(mean, cov, num_nodes)
+        return np.random.multivariate_normal(mean, cov, num_nodes, check_valid='raise')
 
     @staticmethod
     def __calc_actor_distances(actor1: ActorStateHistory, actor2: ActorStateHistory):
@@ -53,6 +53,7 @@ class Oracle(object):
             copy_actors = [x for i2, x in enumerate(self.actors) if i != i2]
             for neighbour_actor in copy_actors:
                 dist = self.__calc_actor_distances(actor, neighbour_actor)
+                print(dist)
                 if dist < transmission_range:
                     actor.add_neighbour(neighbour_actor.state)
                     neighbour_actor.add_neighbour(actor.state)
@@ -71,10 +72,11 @@ class Oracle(object):
         # Simulate each timestep
         # - Increment time (by delta)
         for time_index in range(0, self.time_steps):
+            # print("time {}".format(self.delta_time * time_index))
             # 1) Generate new clock value and find the precalculated random transmitting actors
             transmitting_actor_indices = np.where(self.timenode_istransmitting_random[time_index] == 1)
             # 2) Update nodes with outstanding 'tranmission'
-            for transmitting_actor_index in transmitting_actor_indices[0]: # TODO WHY [0] instead of direct iter
+            for transmitting_actor_index in transmitting_actor_indices[0]:  # TODO WHY [0] instead of direct iter
                 self.actors[transmitting_actor_index].attempt_transmission(
                     max_transmission_range=transmission_range,
                     packet_length=packet_length
@@ -99,9 +101,9 @@ class Oracle(object):
 
 
 if __name__ == '__main__':
-    oracle = Oracle(num_nodes=20, positional_spread=100.0)
+    oracle = Oracle(num_nodes=20, positional_spread=5000.0)
     oracle.preprocess(time_steps=500, delta_time=1,
-                      packet_length=5, transmission_range=80,
+                      packet_length=5, transmission_range=60,
                       transmission_chance=0.15)
 
     for actor in oracle.actors:
