@@ -107,7 +107,7 @@ class Oracle(object):
 
 
 if __name__ == '__main__':
-    oracle = Oracle(num_nodes=20, positional_spread=5000.0)
+    oracle = Oracle(num_nodes=5, positional_spread=5000.0)
     oracle.preprocess(time_steps=500, delta_time=1,
                       packet_length=5, transmission_range=60,
                       transmission_chance=0.15)
