@@ -12,46 +12,34 @@ BG_ALPHA_COLOR = (122, 122, 255)
 class Wave(object):
     def __init__(self,
                  screen: Surface,
-                 bounds_rect: Rect,
-                 local_origin_offset: Vector2,
+                 radius_min,
                  radius_max,
-                 radius_step):
+                 radius_steps,
+                 global_position: Vector2):
         assert screen is not None
         self.screen = screen
-        self.rect = bounds_rect
-        self.local_origin_offset = local_origin_offset
-        self.origin = (0, 0)  # 2D tuple within rect, we dont validate: expect the user is careful
-        self.radius_max_meters = radius_max  # meters/size units
-        self.radius_step_pixels = radius_step  # pixels
-
-    def adjust_origin_local(self, coords_local_meters):
-        self.origin = (coords_local_meters[0], coords_local_meters[1])
+        self.global_position = global_position
+        self.radius_min_pixels = int(radius_min)
+        self.radius_max_pixels = int(radius_max)  # meters/size units
+        self.radius_steps = radius_steps  # pixels
 
     def render(self):
         self.width = 5
         self.filled = False
         self.color = np.array([120, 120, 120])
-        for i in range(50, self.radius_max_meters * self.radius_step_pixels, self.radius_step_pixels):
-            self.draw_wave_circle(i)
+        if self.radius_steps > 0:
+            for i in range(self.radius_min_pixels, self.radius_max_pixels, self.radius_steps):
+                self.draw_wave_circle(i)
+        else:
+            self.draw_wave_circle(self.radius_max_pixels)
 
     def draw_wave_circle(self, radius):
         # https://abarry.org/antialiased-rings-filled-circles-in-pygame/
         # outside antialiased circle
-        pixel_origin = translate_global_to_local(
-            scale_tuple_pix2meter(self.origin, reverse=True),
-            self.rect,
-            self.local_origin_offset,
-            reverse=True)
         pygame.gfxdraw.aacircle(self.screen,
-                                pixel_origin[0],
-                                pixel_origin[1],
+                                self.global_position[0],
+                                self.global_position[1],
                                 radius,
                                 self.color)
         temp = pygame.Surface((TARGET_SIZE, TARGET_SIZE), SRCALPHA)  # the SRCALPHA flag denotes pixel-level alpha
         self.screen.blit(temp, (0, 0), None, BLEND_ADD)
-
-    def translate_to_global_x(self):
-        return self.origin[0] + self.rect.left
-
-    def translate_to_global_y(self):
-        return self.origin[1] + self.rect.top

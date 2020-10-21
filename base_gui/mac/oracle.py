@@ -2,6 +2,7 @@ from typing import List
 
 import numpy as np
 
+from base_gui.mac.actorstate import FrozenActorState
 from base_gui.mac.actorstatehistory import ActorStateHistory
 
 
@@ -14,6 +15,7 @@ class Oracle(object):
         self.positional_spread = positional_spread
 
         self.timenode_istransmitting_poisson: np.ndarray  # dtype=ActorState
+        self.sim_history: np.ndarray
 
     @staticmethod
     def __generate_positions(num_nodes: int, cov_diag: float):
@@ -98,7 +100,12 @@ class Oracle(object):
             # 4) Save state
             for actor in self.actors:
                 actor.save_state_to_history()
-        pass
+        # Flatten result
+        self.sim_history = np.empty((self.time_steps, self.num_nodes), dtype=FrozenActorState)
+        for index, actor in enumerate(self.actors):
+            for time_index, time_actorstate in enumerate(actor.history):
+                self.sim_history[time_index][index] = time_actorstate
+        print("Simulation resulted in {} states stored in 'sim_history'".format(self.sim_history.size))
 
         # Store (optional)
         # - store as JSON with parameters
