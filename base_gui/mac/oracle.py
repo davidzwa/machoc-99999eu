@@ -59,6 +59,13 @@ class Oracle(object):
                     neighbour_actor.add_neighbour(actor.state)
             actor.clear_state()
 
+        check_actor = self.actors[0]
+        for neighbour_actor_state in check_actor.state.neighbour_states:
+            for neighbour in self.actors:
+                if neighbour_actor_state is neighbour.state:
+                    break
+            raise Exception("Neighbour {} state in actor's list of neighbours was dereferenced.".format(neighbour_actor_state.identifier))
+
         # Init sim
         # - Calculate time division: number of time-sliced atomic events
         # - Generate random 2D matrix with random binary choice
