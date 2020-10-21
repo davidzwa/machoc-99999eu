@@ -11,7 +11,6 @@ from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, SimType, SimCon
     MENU_CHECKBOX_SIMTYPE_INDEX
 from base_gui.simulation.gui_sim_mac import GuiSimMac
 from base_gui.simulation.gui_sim_routing import GuiSimRouting
-from base_gui.utils.reference_frame import translate_global_to_local, scale_tuple_pix2meter
 
 
 def start_simulation(payload: Any):
@@ -33,7 +32,7 @@ def construct_simulation(simulation_type: SimType):
             Vector2(300, 10)
         )
         guiSimMac.add_wavefront()
-        guiSimMac.generate_nodes_multivariate(SimConsts.NUM_NODES_MAC, SimConsts.DISTANCE_SPREAD_SIGMA_MAC)
+        guiSimMac.generate_oracle(SimConsts.NUM_NODES_MAC, SimConsts.DISTANCE_SPREAD_SIGMA_MAC)
         return guiSimMac
     else:
         guiSimRouting = GuiSimRouting(SCREEN_SIZE, simulation_window_rect, simulation_origin)
@@ -59,6 +58,11 @@ def mouse_in_frame(mouse_coord, rect):
 
 guiSimMac = construct_simulation(SimType.MAC)
 guiSimRouting = construct_simulation(SimType.ROUTING)
+
+pygame.draw.
+print("Processing guiSimMac")
+guiSimMac.run_oracle_preprocess(SimConsts.TIME_MAX_STEPS, SimConsts.TIME_STEP)
+print("GuiSimMac done")
 
 game_quit = False
 guiSim = guiSimMac
@@ -96,7 +100,8 @@ while not game_quit:
     sliderVal = guiSim.timeline.nodes_slider.getValue()
     if sliderVal != last_num_nodes:
         last_num_nodes = sliderVal
-        guiSim.generate_nodes_multivariate(last_num_nodes, SimConsts.DISTANCE_SPREAD_SIGMA_MAC)
+        # Too heavy
+        # guiSim.generate_nodes_multivariate(last_num_nodes, SimConsts.DISTANCE_SPREAD_SIGMA_MAC)
     timeVal = guiSim.timeline.time_slider.getValue()
 
     ### RENDER
@@ -115,8 +120,8 @@ while not game_quit:
         #     mouse_local_pixels = translate_global_to_local(mouse_global_pixels, guiSim.sim_rect, guiSim.local_origin)
         #     mouse_local_meters = scale_tuple_pix2meter(mouse_local_pixels)
 
-        random_position = random.choice(guiSimMac.node_positions)
-        guiSimMac.wave.adjust_origin_local(random_position)  # Relative positioning
+        random_node = random.choice(guiSimMac.data_nodes)
+        guiSimMac.wave.adjust_origin_local(random_node.position_meters)  # Relative positioning
         guiSimMac.render_wave()
     guiSim.render_datanodes()
 
