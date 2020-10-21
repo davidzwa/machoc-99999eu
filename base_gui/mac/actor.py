@@ -16,7 +16,7 @@ class Actor(object):
 
         self.identifier = identifier
         self.position: np.ndarray = position
-        self.neighbours: List[Actor] = list()
+        # self.neighbours: List[Actor] = list()
 
         if state is None:
             self.state: ActorState = ActorState(identifier, 0.0)
@@ -24,9 +24,8 @@ class Actor(object):
             self.state = state
         self.history: List[ActorState] = list()
 
-    def add_neighbour(self, neighbour):
-        if neighbour not in self.neighbours:
-            self.neighbours.append(neighbour)
+    def add_neighbour(self, neighbour_state: ActorState):
+        self.state.add_neighbour_state(neighbour_state)
 
     def clear_state(self):
         self.state: ActorState = ActorState(self.identifier, 0.0)
@@ -53,4 +52,3 @@ class Actor(object):
         """
         assert delta_time > 0
         self.state.progress_actorstate_time(delta_time)
-
