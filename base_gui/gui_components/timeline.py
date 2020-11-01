@@ -27,7 +27,7 @@ class Timeline(object):
             min=2, max=10, step=1, initial=10)
         self.time_slider = Slider(
             self.screen, int(self.position.x), int(self.position.y)+50, int(self.size.x), int(self.size.y),
-            min=0, max=SimConsts.TIME_MAX_STEPS, step=SimConsts.TIME_STEP, initial=0)
+            min=0, max=SimConsts.TIME_MAX_STEPS-1, step=SimConsts.TIME_STEP, initial=0)
 
     def render(self):
         self.nodes_slider.draw()

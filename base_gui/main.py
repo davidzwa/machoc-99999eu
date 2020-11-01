@@ -126,8 +126,8 @@ while not game_quit:
             newTimeValue += 1
         if newTimeValue <= 0:
             timeVal = 0
-        elif newTimeValue > SimConsts.TIME_MAX_STEPS:
-            timeVal = SimConsts.TIME_MAX_STEPS
+        elif newTimeValue > SimConsts.TIME_MAX_STEPS-1:
+            timeVal = SimConsts.TIME_MAX_STEPS-1
         else:
             timeVal = newTimeValue
         guiSim.timeline.time_slider.setValue(timeVal)
@@ -152,7 +152,7 @@ while not game_quit:
             print(guiSimMac.show_oracle_states_timeindex)
             guiSimMac.timeline.time_slider.setValue(guiSimMac.show_oracle_states_timeindex)
     else:
-        guiSimMac.draw_oraclestate_waves(timeVal-1)
+        guiSimMac.draw_oraclestate_waves(timeVal)
     guiSim.render_datanodes()
 
     # RENDER - Nodes and menu
