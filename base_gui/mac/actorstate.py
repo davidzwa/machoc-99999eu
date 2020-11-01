@@ -8,8 +8,13 @@ import attr
 from base_gui.app_logging import LOGGER
 from base_gui.mac.message import Message, MESSAGE_DISTANCE_PER_TIME, ImmutableMessage
 
+class CarrierSenseState(Enum):
+    IDLE = 0
+    QUEUED = 1
+    TRANSMITTING = 2
+    RECEIVING = 3
 
-class State(Enum):
+class MacState(Enum):
     IDLE = 0
     SENDING_DATA = 11
     # SENDING_RTS = 12
@@ -26,7 +31,7 @@ class State(Enum):
 
 @attr.attrs(auto_attribs=True, frozen=True)
 class FrozenActorState(object):
-    state: State
+    macState: MacState
     identifier: str
     neighbour_messages_carriersense: typing.Tuple[ImmutableMessage]
     queued_messages: typing.Tuple[ImmutableMessage]
@@ -40,7 +45,7 @@ class ActorState(object):
 
         # Time until a delaying state ends, 0 if not transmitting/waiting, also 0 if receiving
         self.state_duration_time = 0
-        self.state = State.IDLE
+        self.state = MacState.IDLE
         # Flattened way to decide colliding messages
         self.neighbour_states: List[ActorState] = list()
         self.queued_messages: Queue[Message] = Queue()
@@ -51,11 +56,16 @@ class ActorState(object):
             self.neighbour_states.append(state)
 
     def handle_new_data_packet(self, message: Message):
-        can_transmit = self.can_transmit(message)
-        if can_transmit:
+        carrier_sense_state = self.can_transmit(message)
+        if carrier_sense_state is CarrierSenseState.IDLE:
+            self.state = MacState.SENDING_CTS # TODO this should become CTS <-> DATA await scheme
             self.in_transit_messages.put(message)
-        else:
-            self.queued_messages.put(message)
+            return
+        elif carrier_sense_state is CarrierSenseState.RECEIVING:
+            self.state = MacState.RECEIVING_DATA # TODO change to what type of receiving state
+        elif carrier_sense_state is CarrierSenseState.TRANSMITTING or carrier_sense_state is CarrierSenseState.QUEUED:
+            self.state = MacState.SENDING_DATA
+        self.queued_messages.put(message)
 
     def get_frozen_state(self, actor_position) -> FrozenActorState:
         frozen_queue_items: List[ImmutableMessage] = list()
@@ -68,14 +78,14 @@ class ActorState(object):
         for neighbour_message in self.get_neighbour_messages_carriersense(actor_position=actor_position):
             frozen_neighbour_items.append(neighbour_message.get_immutable_message())
         return FrozenActorState(
-            state=self.state,
+            macState=self.state,
             identifier=self.identifier,
             queued_messages=tuple(frozen_queue_items),
             in_transit_messages=tuple(frozen_transit_items),
             neighbour_messages_carriersense=tuple(frozen_neighbour_items)
         )
 
-    def can_transmit(self, message: Message):
+    def can_transmit(self, message: Message) -> CarrierSenseState:
         # check if message needs to be queued, dependent on own state and neighbour's state:
         # - Carrier sense blocked by looking at self.interacting_neighbours
         # - SENDING transmitting message (DATA/RTS)
@@ -87,15 +97,19 @@ class ActorState(object):
 
         # Internal transmission check
         if self.queued_messages.qsize() > 0:
-            return False
+            return CarrierSenseState.QUEUED
         elif self.in_transit_messages.qsize() > 0:
             # for message in list(self.in_transit_messages):
             last_message = self.in_transit_messages.queue[-1]
             if last_message.check_message_transmitting():
-                return False
+                return CarrierSenseState.TRANSMITTING
 
         # Carrier sense external
-        return not self.check_message_carriersense(message.origin_position)
+        carrier_sense = not self.check_message_carriersense(message.origin_position)
+        if carrier_sense:
+            return CarrierSenseState.RECEIVING
+        else:
+            return CarrierSenseState.IDLE
 
     def get_neighbour_messages_carriersense(self, actor_position):
         arriving_messages: List[Message] = list()
@@ -127,14 +141,16 @@ class ActorState(object):
         self.time += delta_time
         self.purge_outofrange_messages(outofrange_messages)
 
-        if self.queued_messages.qsize() > 0 and self.check_message_transmitting() == 0:
+        antenna_available = self.check_message_transmitting()
+        if self.queued_messages.qsize() > 0 and antenna_available == 0:
             length_before = self.queued_messages.qsize()
             message = self.queued_messages.get()
             self.in_transit_messages.put(message)
             length_after = self.queued_messages.qsize()
             assert length_before is length_after + 1
-
             # print("MSG from queue to transmit >>>", message.payload, "queue length", self.queued_messages.qsize())
+        elif antenna_available is True:
+            self.state = MacState.IDLE
 
     def check_message_transmitting(self):
         transmitting = 0

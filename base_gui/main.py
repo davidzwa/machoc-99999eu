@@ -8,7 +8,7 @@ from pygame import Vector2
 from base_gui.app_logging import LOGGER
 from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, SimType, SimConsts, MENU_CHECKBOXES_MAC, \
     MENU_CHECKBOXES_ROUTING, \
-    MENU_CHECKBOX_SIMTYPE_INDEX
+    MENU_CHECKBOX_SIMTYPE_INDEX, MENU_CHECKBOX_MAC_AUTOPLAY
 from base_gui.simulation.gui_sim_mac import GuiSimMac
 from base_gui.simulation.gui_sim_routing import GuiSimRouting
 
@@ -67,9 +67,17 @@ game_quit = False
 guiSim = guiSimMac
 current_sim_type = SimType.MAC
 last_num_nodes = len(guiSim.data_nodes)
-step_difference_millis = 100 # 4 steps per second
+guiSim.timeline.nodes_slider.setValue(last_num_nodes)
+
+# Auto-play sim variables
+step_difference_millis = 200 # 4 steps per second
 simulation_time = pygame.time.get_ticks() # integer index < SimConsts.TIME_MAX_STEPS
+timeline_debounce = 75 # minimum ticks between timeline update by LEFT/RIGHT arrows
+last_timeline_change = pygame.time.get_ticks()
+
 while not game_quit:
+    current_time_sim = pygame.time.get_ticks()
+
     ### CAPTURE
     events = pygame.event.get()
     for event in events:
@@ -102,10 +110,27 @@ while not game_quit:
     # Updating nodes is not smart for now, maybe later.
     # if sliderVal != last_num_nodes:
     #     last_num_nodes = sliderVal
-    timeVal = guiSim.timeline.time_slider.getValue()
 
     ### RENDER
     guiSim.screen.fill((245, 245, 245))
+
+    # Calculate timeline slider value based on keys and waiting
+    timeVal = guiSim.timeline.time_slider.getValue()
+    newTimeValue = timeVal
+    if current_time_sim - last_timeline_change > timeline_debounce:
+        last_timeline_change = current_time_sim
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            newTimeValue -= 1
+        if keys[pygame.K_RIGHT]:
+            newTimeValue += 1
+        if newTimeValue <= 0:
+            timeVal = 0
+        elif newTimeValue > SimConsts.TIME_MAX_STEPS-1:
+            timeVal = SimConsts.TIME_MAX_STEPS-1
+        else:
+            timeVal = newTimeValue
+        guiSim.timeline.time_slider.setValue(timeVal)
 
     # RENDER - Update text by grabbing guiSim children
     font_surface = guiSim.font.render("Number of nodes: {} ".format(sliderVal), True, pygame.Color("black"))
@@ -114,16 +139,20 @@ while not game_quit:
     guiSim.screen.blit(font_surface, dest=(guiSim.timeline.time_slider.x, guiSim.timeline.time_slider.y + 20))
 
     ### PROCESS mouse & RENDER WAVE and NODES
-    current_time_sim = pygame.time.get_ticks()
-    if current_sim_type is SimType.MAC and current_time_sim - simulation_time > step_difference_millis:
-        simulation_time = current_time_sim
-        # mouse_global_pixels = pygame.mouse.get_pos()
-        # if mouse_in_frame(mouse_global_pixels, guiSim.sim_rect):
-        #     mouse_local_pixels = translate_global_to_local(mouse_global_pixels, guiSim.sim_rect, guiSim.local_origin)
-        #     mouse_local_meters = scale_tuple_pix2meter(mouse_local_pixels)
-        # guiSimMac.wave.adjust_origin_local(random_node.position_meters)  # Relative positioning
-        guiSimMac.show_next_oracle_timeindex()
-        print(guiSimMac.show_oracle_states_timeindex)
+    autoplay = guiSim.get_checkbox_value(1, MENU_CHECKBOX_MAC_AUTOPLAY)
+    if autoplay:
+        if current_sim_type is SimType.MAC and current_time_sim - simulation_time > step_difference_millis:
+            simulation_time = current_time_sim
+            # mouse_global_pixels = pygame.mouse.get_pos()
+            # if mouse_in_frame(mouse_global_pixels, guiSim.sim_rect):
+            #     mouse_local_pixels = translate_global_to_local(mouse_global_pixels, guiSim.sim_rect, guiSim.local_origin)
+            #     mouse_local_meters = scale_tuple_pix2meter(mouse_local_pixels)
+            # guiSimMac.wave.adjust_origin_local(random_node.position_meters)  # Relative positioning
+            guiSimMac.show_next_oracle_timeindex()
+            print(guiSimMac.show_oracle_states_timeindex)
+            guiSimMac.timeline.time_slider.setValue(guiSimMac.show_oracle_states_timeindex)
+    else:
+        guiSimMac.draw_oraclestate_waves(timeVal)
     guiSim.render_datanodes()
 
     # RENDER - Nodes and menu

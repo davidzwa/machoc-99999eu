@@ -77,7 +77,6 @@ class GuiSimMac(Game):
             self.show_oracle_states_timeindex += 1
         else:
             self.show_oracle_states_timeindex = 0
-
         self.draw_oraclestate_waves(self.show_oracle_states_timeindex)
 
     def draw_oraclestate_waves(self, time: int):
@@ -93,6 +92,7 @@ class GuiSimMac(Game):
                     Vector2(message.prop_distance - message.prop_packet_length, message.prop_distance)
                 )
             self.data_nodes[index].set_wavefronts(intransit_message_distances)
+            self.data_nodes[index].set_color_by_state(state.macState)
         pass
 
     def render_datanodes(self):
