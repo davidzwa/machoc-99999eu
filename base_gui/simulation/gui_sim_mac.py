@@ -77,7 +77,6 @@ class GuiSimMac(Game):
             self.show_oracle_states_timeindex += 1
         else:
             self.show_oracle_states_timeindex = 0
-
         self.draw_oraclestate_waves(self.show_oracle_states_timeindex)
 
     def draw_oraclestate_waves(self, time: int):

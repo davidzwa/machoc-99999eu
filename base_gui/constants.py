@@ -9,8 +9,9 @@ MENU_CHECKBOXES_GENERIC = (
     "MAC 0, ROUTING 1",  # Index 0
     "Hide node labels",  # Index 1
 )
+MENU_CHECKBOX_MAC_AUTOPLAY = 0
 MENU_CHECKBOXES_MAC = (
-    "MAC checkbox here",
+    "Auto-play sim", # index 0
 )
 MENU_CHECKBOXES_ROUTING = (
     "ROUTING checkbox here",
@@ -29,11 +30,11 @@ SIM_SIZE = Vector2(800, 800)
 SCREEN_SIZE = Vector2(SIM_SIZE.x + NAV_WIDTH, SIM_SIZE.y + BOTTOM_HEIGHT)
 
 class SimConsts(object):
-    TIME_MAX_STEPS = 500
+    TIME_MAX_STEPS = 250
     TIME_STEP = 1
 
     # MAC SIMULATION PARAMETERS
-    NUM_NODES_MAC = 7
+    NUM_NODES_MAC = 3
     DISTANCE_SPREAD_SIGMA_MAC = 250
     PACKET_LENGTH_SPACE = 3
     TRANSMISSION_RANGE = 30

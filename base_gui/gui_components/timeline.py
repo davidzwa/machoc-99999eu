@@ -3,6 +3,7 @@ from typing import Callable, Any
 from pygame import Vector2
 from pygame.surface import Surface
 
+from base_gui.constants import SimConsts
 from pygame_widgets import Slider
 
 
@@ -26,7 +27,7 @@ class Timeline(object):
             min=2, max=10, step=1, initial=10)
         self.time_slider = Slider(
             self.screen, int(self.position.x), int(self.position.y)+50, int(self.size.x), int(self.size.y),
-            min=0, max=100, step=1, initial=0)
+            min=0, max=SimConsts.TIME_MAX_STEPS, step=SimConsts.TIME_STEP, initial=0)
 
     def render(self):
         self.nodes_slider.draw()
