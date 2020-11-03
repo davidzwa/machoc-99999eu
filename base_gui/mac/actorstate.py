@@ -62,18 +62,6 @@ class ActorState(object):
         if state not in self.neighbour_states:
             self.neighbour_states.append(state)
 
-    # def handle_new_data_packet(self, message: Message):
-    #     carrier_sense_state = self.can_transmit(message)
-    #     if carrier_sense_state is CarrierSenseState.IDLE:
-    #         self.state = MacState.SENDING_CTS  # TODO this should become CTS <-> DATA await scheme
-    #         self.in_transit_messages.put(message)
-    #         return
-    #     elif carrier_sense_state is CarrierSenseState.RECEIVING:
-    #         self.state = MacState.RECEIVING_DATA  # TODO change to what type of receiving state
-    #     elif carrier_sense_state is CarrierSenseState.TRANSMITTING or carrier_sense_state is CarrierSenseState.QUEUED:
-    #         self.state = MacState.SENDING_DATA
-    #     self.queued_messages.put(message)
-
     def get_frozen_state(self) -> FrozenActorState:
         frozen_queue_items: List[ImmutableMessage] = list()
         frozen_transit_items: List[ImmutableMessage] = list()
