@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python: Module",
             "type": "python",
@@ -17,9 +18,9 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/base_gui/main.py",
+            "program": "${workspaceFolder}/routing/main.py",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/base_gui"
+            "cwd": "${workspaceFolder}/routing"
         }
     ]
 }
