@@ -24,7 +24,7 @@ class Game(ABC):
         pygame.init()
         pygame.font.init()
         self.font = pygame.font.Font(pygame.font.get_default_font(), 15)
-        self.screen = pygame.display.set_mode(vector2_to_int_tuple(self.size), DOUBLEBUF | RESIZABLE)
+        self.screen = pygame.display.set_mode(vector2_to_int_tuple(self.size), DOUBLEBUF)
         self.side_menu = SideNav(self.screen, self.nav_rect_bounds, generic_callback=generic_nav_callback)
         pygame.display.set_caption("Six Figure Potential - MacRouting Simulator")
         pygame.display.flip()

@@ -85,19 +85,11 @@ class Oracle(object):
         # - Increment time (by delta)
         for time_index in range(0, self.time_steps):
             # print("time {}".format(self.delta_time * time_index))
-            # 1) Generate new clock value and find the precalculated random transmitting actors
-            transmitting_actor_indices = np.where(self.timenode_istransmitting_random[time_index] == 1)
-            # 2) Update nodes with outstanding 'tranmission'
-            for transmitting_actor_index in transmitting_actor_indices[0]:  # TODO WHY [0] instead of direct iter
-                self.actors[transmitting_actor_index].attempt_transmission(
-                    max_transmission_range=transmission_range,
-                    packet_length=packet_length
-                )
-            # 3) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
+            # 1) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
             # - Update any nodes with outstanding 'arrivals', MAC update and/or 'out-of-range messages'
-            for actor in self.actors:
-                actor.progress_time(self.delta_time)
-            # 4) Save state
+            for actor_index, actor in enumerate(self.actors):
+                actor.progress_time(self.timenode_istransmitting_random[time_index][actor_index])
+            # 2) Save state
             for actor in self.actors:
                 actor.save_state_to_history()
         # Flatten result

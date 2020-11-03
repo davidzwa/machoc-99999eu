@@ -1,4 +1,6 @@
 import typing
+import uuid
+import random
 from enum import Enum
 from queue import Queue
 from typing import List
@@ -6,27 +8,16 @@ from typing import List
 import attr
 
 from base_gui.app_logging import LOGGER
-from base_gui.mac.message import Message, MESSAGE_DISTANCE_PER_TIME, ImmutableMessage
+from base_gui.constants import SimConsts
+from base_gui.mac.macstate import MacState
+from base_gui.mac.message import Message, MESSAGE_DISTANCE_PER_TIME, ImmutableMessage, MessageType
+
 
 class CarrierSenseState(Enum):
     IDLE = 0
     QUEUED = 1
     TRANSMITTING = 2
     RECEIVING = 3
-
-class MacState(Enum):
-    IDLE = 0
-    SENDING_DATA = 11
-    # SENDING_RTS = 12
-    SENDING_CTS = 13
-    # SENDING_ACK = 14
-    AWAITING_DATA = 21
-    AWAITING_CTS = 22
-    # AWAITING_ACK = 24
-    RECEIVING_DATA = 31
-    RECEIVING_CTS = 32
-    # RECEIVING_RTS = 33
-    # RECEIVING_ACK = 34
 
 
 @attr.attrs(auto_attribs=True, frozen=True)
@@ -39,7 +30,13 @@ class FrozenActorState(object):
 
 
 class ActorState(object):
-    def __init__(self, identifier, time):
+    def __init__(self, identifier, time, position,
+                 transmission_range=SimConsts.TRANSMISSION_RANGE,
+                 packet_length=SimConsts.PACKET_LENGTH_SPACE,
+                 time_step=SimConsts.TIME_STEP,
+                 min_wait_time=SimConsts.MIN_WAIT_TIME,
+                 max_wait_time=SimConsts.MAX_WAIT_TIME):
+
         self.identifier = identifier
         self.time = time
 
@@ -51,23 +48,21 @@ class ActorState(object):
         self.queued_messages: Queue[Message] = Queue()
         self.in_transit_messages: Queue[Message] = Queue()
 
+        self.position = position
+
+        self.max_transmission_range = transmission_range
+        self.packet_length = packet_length
+        self.time_step = time_step
+
+        self.min_wait_time = min_wait_time
+        self.max_wait_time = max_wait_time
+        self.wait_time = 0
+
     def add_neighbour_state(self, state: 'ActorState'):
         if state not in self.neighbour_states:
             self.neighbour_states.append(state)
 
-    def handle_new_data_packet(self, message: Message):
-        carrier_sense_state = self.can_transmit(message)
-        if carrier_sense_state is CarrierSenseState.IDLE:
-            self.state = MacState.SENDING_CTS # TODO this should become CTS <-> DATA await scheme
-            self.in_transit_messages.put(message)
-            return
-        elif carrier_sense_state is CarrierSenseState.RECEIVING:
-            self.state = MacState.RECEIVING_DATA # TODO change to what type of receiving state
-        elif carrier_sense_state is CarrierSenseState.TRANSMITTING or carrier_sense_state is CarrierSenseState.QUEUED:
-            self.state = MacState.SENDING_DATA
-        self.queued_messages.put(message)
-
-    def get_frozen_state(self, actor_position) -> FrozenActorState:
+    def get_frozen_state(self) -> FrozenActorState:
         frozen_queue_items: List[ImmutableMessage] = list()
         frozen_transit_items: List[ImmutableMessage] = list()
         frozen_neighbour_items: List[ImmutableMessage] = list()
@@ -75,7 +70,7 @@ class ActorState(object):
             frozen_queue_items.append(queued_message.get_immutable_message())
         for in_transit_message in self.in_transit_messages.queue:
             frozen_transit_items.append(in_transit_message.get_immutable_message())
-        for neighbour_message in self.get_neighbour_messages_carriersense(actor_position=actor_position):
+        for neighbour_message in self.get_neighbour_messages_carriersense():
             frozen_neighbour_items.append(neighbour_message.get_immutable_message())
         return FrozenActorState(
             macState=self.state,
@@ -105,52 +100,79 @@ class ActorState(object):
                 return CarrierSenseState.TRANSMITTING
 
         # Carrier sense external
-        carrier_sense_free = not self.check_message_carriersense(message.origin_position)
+        carrier_sense_free = not self.any_neighbour_message_arriving(message.origin_position)
         if carrier_sense_free:
             return CarrierSenseState.IDLE
         else:
             return CarrierSenseState.RECEIVING
 
-    def get_neighbour_messages_carriersense(self, actor_position):
+    def get_neighbour_messages_carriersense(self):
         arriving_messages: List[Message] = list()
         for neighbour in self.neighbour_states:
             for message in neighbour.in_transit_messages.queue:
                 # It would be illegal to find neighbour messages except for the ones 'arriving'
-                if message.check_message_arriving(actor_position):
+                if message.check_message_arriving(self.position):
                     arriving_messages.append(message)
         return arriving_messages
 
-    def check_message_carriersense(self, actor_position):
+    def any_neighbour_message_arriving(self):
         """
         Nice method to check whether neighbouring actors have messages which are already streaming into our position.
         """
+        # TODO DO BETTER, very expensive (hashmap)
         for neighbour in self.neighbour_states:
             for message in neighbour.in_transit_messages.queue:
                 # It would be illegal to find neighbour messages except for the ones 'arriving'
-                if message.check_message_arriving(actor_position):
+                if message.check_message_arriving(self.position):
                     return True
         return False
 
-    def progress_actorstate_time(self, delta_time):
+    def progress_actorstate_time(self, new_message: bool) -> typing.Any:
+
+        # propogate messages
         outofrange_messages = list()
         for message in self.in_transit_messages.queue:
-            message.prop_distance += delta_time / MESSAGE_DISTANCE_PER_TIME
+            message.prop_distance += self.time_step / MESSAGE_DISTANCE_PER_TIME
             if message.check_message_done():
                 outofrange_messages.append(message)
         # Convert time to find new distance of message: head of wave
-        self.time += delta_time
-        self.purge_outofrange_messages(outofrange_messages)
+        self.time += self.time_step
+        self.purge_outofrange_messages(outofrange_messages) #TODO purge + cutoff
 
-        antenna_available = self.check_message_transmitting()
-        if self.queued_messages.qsize() > 0 and antenna_available == 0:
-            length_before = self.queued_messages.qsize()
-            message = self.queued_messages.get()
-            self.in_transit_messages.put(message)
-            length_after = self.queued_messages.qsize()
-            assert length_before is length_after + 1
-            # print("MSG from queue to transmit >>>", message.payload, "queue length", self.queued_messages.qsize())
-        elif antenna_available is True:
-            self.state = MacState.IDLE
+        if new_message:
+            self.new_arrival()
+
+        # mac protocol FSM
+        next_state = self.state
+        if self.state == MacState.IDLE:
+            if self.queued_messages.qsize() > 0:
+                next_state = MacState.READY_TO_TRANSMIT
+
+        elif self.state == MacState.READY_TO_TRANSMIT:
+            if not self.any_neighbour_message_arriving():
+                self.in_transit_messages.put(self.queued_messages.queue[0])
+                next_state = MacState.TRANSMITTING
+
+        elif self.state == MacState.TRANSMITTING:
+            current_message = self.in_transit_messages.queue[-1]
+            if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
+                del self.queued_messages.queue[0] # message transmitted succesfully, so remove it form the queue
+                if self.queued_messages.qsize() > 0:
+                    next_state = MacState.READY_TO_TRANSMIT
+                else:
+                    next_state = MacState.IDLE
+
+            elif self.any_neighbour_message_arriving():  # Collision detected
+                current_message.cut_off_message()
+                self.wait_time = random.randint(self.min_wait_time, self.max_wait_time)
+                next_state = MacState.WAIT
+
+        elif self.state == MacState.WAIT:
+            self.wait_time -= 1
+            if not self.wait_time:
+                next_state = MacState.READY_TO_TRANSMIT
+
+        self.state = next_state
 
     def check_message_transmitting(self):
         transmitting = 0
@@ -167,3 +189,13 @@ class ActorState(object):
             LOGGER.debug("Deleted message at time {} with prop. distance {} [m].".format(self.time,
                                                                                          message.get_distance_travelled()))
             self.in_transit_messages.queue.remove(message)
+
+    def new_arrival(self):
+        msg = Message(
+            type=MessageType.DATA,
+            prop_packet_length=self.packet_length,
+            origin=self.position,
+            payload=uuid.uuid4(),
+            max_range=self.max_transmission_range
+        )
+        self.queued_messages.put(msg)

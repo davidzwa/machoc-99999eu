@@ -18,7 +18,7 @@ class ActorStateHistory(object):
         self.position: np.ndarray = position
 
         if state is None:
-            self.state: ActorState = ActorState(identifier, 0.0)
+            self.state: ActorState = ActorState(identifier, 0.0, self.position)
         else:
             self.state = state
         self.history: List[FrozenActorState] = list()
@@ -28,27 +28,8 @@ class ActorStateHistory(object):
         pass
 
     def save_state_to_history(self):
-        frozen_state: FrozenActorState = self.state.get_frozen_state(self.position)
+        frozen_state: FrozenActorState = self.state.get_frozen_state()
         self.history.append(frozen_state)
 
-    def attempt_transmission(self, max_transmission_range=100 * MESSAGE_DISTANCE_PER_TIME,
-                             packet_length=10 * MESSAGE_DISTANCE_PER_TIME):
-        """
-        Send a DATA packet with x times the length of the most basic TIME unit
-        The underlying protocol will send RTS/CTS
-        """
-        msg = Message(
-            type=MessageType.DATA,
-            prop_packet_length=packet_length,
-            origin=self.position,
-            payload=uuid.uuid4(),
-            max_range=max_transmission_range
-        )
-        self.state.handle_new_data_packet(message=msg)
-
-    def progress_time(self, delta_time):
-        """
-        Assign new time, assume it is monotonically increasing or None if not.
-        """
-        assert delta_time > 0
-        self.state.progress_actorstate_time(delta_time)
+    def progress_time(self, new_message):
+        self.state.progress_actorstate_time(new_message)

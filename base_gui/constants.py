@@ -5,7 +5,7 @@ import pygame
 from pygame import Vector2
 
 # Defines both the number of checkboxes and their labels
-from base_gui.mac.actorstate import MacState
+from base_gui.mac.macstate import MacState
 
 MENU_CHECKBOX_SIMTYPE_INDEX = 0
 MENU_CHECKBOX_NODELABELS_INDEX = 1
@@ -15,7 +15,7 @@ MENU_CHECKBOXES_GENERIC = (
 )
 MENU_CHECKBOX_MAC_AUTOPLAY = 0
 MENU_CHECKBOXES_MAC = (
-    "Auto-play sim", # index 0
+    "Auto-play sim",  # index 0
 )
 MENU_CHECKBOXES_ROUTING = (
     "ROUTING checkbox here",
@@ -26,12 +26,14 @@ class SimType(enum.Enum):
     MAC = 0
     ROUTING = 1
 
-PIXELS_PER_METER = 10 # Might become dynamic based on zoom later
+
+PIXELS_PER_METER = 10  # Might become dynamic based on zoom later
 SIM_MODE = SimType.MAC  # Not implemented
 NAV_WIDTH = 200
 BOTTOM_HEIGHT = 0
 SIM_SIZE = Vector2(1200, 800)
 SCREEN_SIZE = Vector2(SIM_SIZE.x + NAV_WIDTH, SIM_SIZE.y + BOTTOM_HEIGHT)
+
 
 class SimConsts(object):
     TIME_MAX_STEPS = 250
@@ -43,18 +45,19 @@ class SimConsts(object):
     PACKET_LENGTH_SPACE = 3
     TRANSMISSION_RANGE = 50
     TRANSMISSION_CHANCE = 0.03
-    WAVES_DENSITY = 5
+    WAVES_DENSITY = 2
 
     # ROUTING SIMULATION PARAMETERS
     NUM_NODES_ROUTING = 5
     DISTANCE_SPREAD_SIGMA_ROUTING = 30
 
-    STATE_COLOR_DICT : Dict[MacState, pygame.Color] = {
+    # RANDOM BACKOFF LIMITS
+    MIN_WAIT_TIME = 1
+    MAX_WAIT_TIME = 6
+
+    STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
         MacState.IDLE: pygame.Color("green"),
-        MacState.AWAITING_CTS: pygame.Color("blue"),
-        MacState.AWAITING_DATA: pygame.Color("blue"),
-        MacState.RECEIVING_CTS: pygame.Color("red"),
-        MacState.RECEIVING_DATA: pygame.Color("red"),
-        MacState.SENDING_CTS: pygame.Color("purple"),
-        MacState.SENDING_DATA: pygame.Color("purple")
+        MacState.READY_TO_TRANSMIT: pygame.Color("blue"),
+        MacState.WAIT: pygame.Color("red"),
+        MacState.TRANSMITTING: pygame.Color("purple")
     }
