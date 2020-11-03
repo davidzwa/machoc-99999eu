@@ -95,6 +95,13 @@ class Message(object):
         """
         return self.max_range < self.prop_distance
 
+    def cut_off_message(self):
+        """
+        Stop transmitting new parts of the message, reducing the length to what was already in the air
+        """
+        assert self.check_message_transmitting()
+        self.prop_packet_length = self.prop_distance
+
     # def __del__(self):
     #     pass
     # print("Im losing it.")

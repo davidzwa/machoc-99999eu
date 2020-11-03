@@ -55,7 +55,7 @@ def mouse_in_frame(mouse_coord, rect):
            and mouse_coord[1] > rect.top \
            and mouse_coord[1] < rect.top + rect.height
 
-if __name__ is '__main__':
+if __name__ == '__main__':
     np.random.seed(1) # Fix seed for debugging purposes
 
     guiSimMac = construct_simulation(SimType.MAC)
