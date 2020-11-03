@@ -105,11 +105,11 @@ class ActorState(object):
                 return CarrierSenseState.TRANSMITTING
 
         # Carrier sense external
-        carrier_sense = not self.check_message_carriersense(message.origin_position)
-        if carrier_sense:
-            return CarrierSenseState.RECEIVING
-        else:
+        carrier_sense_free = not self.check_message_carriersense(message.origin_position)
+        if carrier_sense_free:
             return CarrierSenseState.IDLE
+        else:
+            return CarrierSenseState.RECEIVING
 
     def get_neighbour_messages_carriersense(self, actor_position):
         arriving_messages: List[Message] = list()
