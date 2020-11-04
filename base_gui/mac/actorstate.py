@@ -1,6 +1,6 @@
+import random
 import typing
 import uuid
-import random
 from enum import Enum
 from queue import Queue
 from typing import List
@@ -32,7 +32,8 @@ class FrozenActorState(object):
 class ActorState(object):
     def __init__(self, identifier, time, position,
                  transmission_range=SimConsts.TRANSMISSION_RANGE,
-                 packet_length=SimConsts.PACKET_LENGTH_SPACE,
+                 data_packet_length=SimConsts.PACKET_LENGTH_SPACE,
+                 jamming_packet_length=SimConsts.JAMMING_LENGTH_SPACE,
                  time_step=SimConsts.TIME_STEP,
                  min_wait_time=SimConsts.MIN_WAIT_TIME,
                  max_wait_time=SimConsts.MAX_WAIT_TIME):
@@ -51,7 +52,9 @@ class ActorState(object):
         self.position = position
 
         self.max_transmission_range = transmission_range
-        self.packet_length = packet_length
+        self.data_packet_length = data_packet_length
+        self.jamming_packet_length = jamming_packet_length
+
         self.time_step = time_step
 
         self.min_wait_time = min_wait_time
@@ -137,7 +140,7 @@ class ActorState(object):
                 outofrange_messages.append(message)
         # Convert time to find new distance of message: head of wave
         self.time += self.time_step
-        self.purge_outofrange_messages(outofrange_messages) #TODO purge + cutoff
+        self.purge_outofrange_messages(outofrange_messages)  # TODO purge + cutoff
 
         if new_message:
             self.new_arrival()
@@ -156,7 +159,7 @@ class ActorState(object):
         elif self.state == MacState.TRANSMITTING:
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
-                del self.queued_messages.queue[0] # message transmitted succesfully, so remove it form the queue
+                del self.queued_messages.queue[0]  # message transmitted succesfully, so remove it form the queue
                 if self.queued_messages.qsize() > 0:
                     next_state = MacState.READY_TO_TRANSMIT
                 else:
@@ -164,6 +167,12 @@ class ActorState(object):
 
             elif self.any_neighbour_message_arriving():  # Collision detected
                 current_message.cut_off_message()
+                self.jamming_message()
+                next_state = MacState.JAMMING
+
+        elif self.state == MacState.JAMMING:
+            current_message = self.in_transit_messages.queue[-1]
+            if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
                 self.wait_time = random.randint(self.min_wait_time, self.max_wait_time)
                 next_state = MacState.WAIT
 
@@ -193,9 +202,22 @@ class ActorState(object):
     def new_arrival(self):
         msg = Message(
             type=MessageType.DATA,
-            prop_packet_length=self.packet_length,
+            prop_packet_length=self.data_packet_length,
             origin=self.position,
             payload=uuid.uuid4(),
             max_range=self.max_transmission_range
         )
         self.queued_messages.put(msg)
+
+    def jamming_message(self):
+        # place jamming message on the antenna
+
+        msg = Message(
+            type=MessageType.JAMMING,
+            prop_packet_length=self.jamming_packet_length,
+            origin=self.position,
+            payload=uuid.uuid4(),
+            max_range=self.max_transmission_range
+        )
+
+        self.in_transit_messages.put(msg)

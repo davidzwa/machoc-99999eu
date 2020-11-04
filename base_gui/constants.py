@@ -43,6 +43,7 @@ class SimConsts(object):
     NUM_NODES_MAC = 3
     DISTANCE_SPREAD_SIGMA_MAC = 250
     PACKET_LENGTH_SPACE = 3
+    JAMMING_LENGTH_SPACE = 6
     TRANSMISSION_RANGE = 50
     TRANSMISSION_CHANCE = 0.03
     WAVES_DENSITY = 2
@@ -58,6 +59,7 @@ class SimConsts(object):
     STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
         MacState.IDLE: pygame.Color("gray"),
         MacState.READY_TO_TRANSMIT: pygame.Color("blue"),
-        MacState.WAIT: pygame.Color("red"),
-        MacState.TRANSMITTING: pygame.Color("purple")
+        MacState.WAIT: pygame.Color("yellow"),
+        MacState.TRANSMITTING: pygame.Color("purple"),
+        MacState.JAMMING: pygame.Color("red")
     }

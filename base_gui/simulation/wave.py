@@ -15,6 +15,7 @@ class Wave(object):
                  radius_min,
                  radius_max,
                  radius_steps,
+                 color,
                  global_position: Vector2):
         assert screen is not None
         self.screen = screen
@@ -22,11 +23,12 @@ class Wave(object):
         self.radius_min_pixels = int(radius_min)
         self.radius_max_pixels = int(radius_max)  # meters/size units
         self.radius_steps = radius_steps  # pixels
+        self.color = color
 
     def render(self):
         self.width = 5
         self.filled = False
-        self.color = np.array([120, 120, 120])
+       # self.color = np.array([120, 120, 120])
         if self.radius_steps > 0:
             for i in range(self.radius_min_pixels, self.radius_max_pixels, self.radius_steps):
                 self.draw_wave_circle(i)

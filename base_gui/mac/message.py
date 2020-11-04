@@ -1,18 +1,13 @@
 import uuid
-from enum import Enum
 from typing import Any
 
 import attr
 import numpy as np
 
+from base_gui.mac.messagetype import MessageType
+
 MESSAGE_DISTANCE_PER_TIME = 1.0  # One distance unit per time unit
 
-
-class MessageType(Enum):
-    DATA = 0,
-    CTS = 1,
-    RTS = 2,
-    ACK = 3
 
 
 @attr.attrs(auto_attribs=True, frozen=True)

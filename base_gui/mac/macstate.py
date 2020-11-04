@@ -6,3 +6,4 @@ class MacState(Enum):
     READY_TO_TRANSMIT = 2
     TRANSMITTING = 3
     WAIT = 4
+    JAMMING = 5

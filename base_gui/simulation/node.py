@@ -1,13 +1,17 @@
 from typing import List
 
+import numpy as np
 import pygame
 from pygame import Vector2, Surface, gfxdraw
+from pygame import Vector3
 from pygame.rect import Rect
 
 from base_gui.constants import SimConsts
 from base_gui.mac.actorstate import MacState
+from base_gui.mac.messagetype import MessageType
 from base_gui.simulation.wave import Wave
 from base_gui.utils.reference_frame import vector2_global_to_local, scale_tuple_pix2meter
+
 
 class Node(object):
     """
@@ -43,7 +47,7 @@ class Node(object):
     def set_color_by_state(self, state: MacState):
         self.color = SimConsts.STATE_COLOR_DICT[state]
 
-    def set_wavefronts(self, wave_specs: List[Vector2]):
+    def set_wavefronts(self, wave_specs: List[Vector2], message_types):
         """
         Visualize multiple in-transit message wavefronts.
         Each Vector2 contains 2 distances: min,max wave-distance to shape the donut
@@ -51,20 +55,22 @@ class Node(object):
 
         # Iterate wave_specs
         self.waves = list()
-        for minmax_donut in wave_specs:
+        for index, minmax_donut in enumerate(wave_specs):
             assert minmax_donut[1] >= 0
             if minmax_donut == 0:
                 continue
             minmax_donut = scale_tuple_pix2meter(minmax_donut, reverse=True)
             if minmax_donut[0] > 0:
-                self.add_wavefront(minmax_donut[0], minmax_donut[1])
+                self.add_wavefront(minmax_donut[0], minmax_donut[1], message_types[index])
             else:
-                self.add_wavefront(0, minmax_donut[1])
+                self.add_wavefront(0, minmax_donut[1], message_types[index])
 
-    def add_wavefront(self, min_radius, max_radius):
+    def add_wavefront(self, min_radius, max_radius, message_type):
+        color = self.message_color(message_type)
+
         self.waves.append(
             Wave(self.screen,
-                 min_radius, max_radius, SimConsts.WAVES_DENSITY,
+                 min_radius, max_radius, SimConsts.WAVES_DENSITY, color,
                  global_position=self.global_position)
         )
 
@@ -86,3 +92,11 @@ class Node(object):
         assert self.waves is not None
         for wave in self.waves:
             wave.render()
+
+    def message_color(self, message_type):
+
+        if message_type == MessageType.JAMMING:
+            return pygame.Color("red3")
+        else:
+            return pygame.Color("black")
+            #np.array([120, 120, 120])

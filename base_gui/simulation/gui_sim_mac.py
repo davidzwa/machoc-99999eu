@@ -87,11 +87,14 @@ class GuiSimMac(Game):
             assert state.identifier == self.data_nodes[index].node_title
             # print(index, state.identifier, self.data_nodes[index].node_title)
             intransit_message_distances = list()
+            intransit_message_types = list()
             for message in state.in_transit_messages:
                 intransit_message_distances.append(
                     Vector2(message.prop_distance - message.prop_packet_length, message.prop_distance)
                 )
-            self.data_nodes[index].set_wavefronts(intransit_message_distances)
+                intransit_message_types.append(message.type)
+
+            self.data_nodes[index].set_wavefronts(intransit_message_distances, intransit_message_types)
             self.data_nodes[index].set_color_by_state(state.macState)
         pass
 
