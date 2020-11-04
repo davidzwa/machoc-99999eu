@@ -56,7 +56,7 @@ class SimConsts(object):
     MAX_WAIT_TIME = 6
 
     STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
-        MacState.IDLE: pygame.Color("green"),
+        MacState.IDLE: pygame.Color("gray"),
         MacState.READY_TO_TRANSMIT: pygame.Color("blue"),
         MacState.WAIT: pygame.Color("red"),
         MacState.TRANSMITTING: pygame.Color("purple")
