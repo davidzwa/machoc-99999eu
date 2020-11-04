@@ -6,6 +6,7 @@ from pygame import Vector2
 
 # Defines both the number of checkboxes and their labels
 from base_gui.mac.macstate import MacState
+from base_gui.mac.messagetype import MessageType
 
 MENU_CHECKBOX_SIMTYPE_INDEX = 0
 MENU_CHECKBOX_NODELABELS_INDEX = 1
@@ -62,4 +63,12 @@ class SimConsts(object):
         MacState.WAIT: pygame.Color("yellow"),
         MacState.TRANSMITTING: pygame.Color("purple"),
         MacState.JAMMING: pygame.Color("red")
+    }
+
+    MESSAGE_COLOR_DICT: Dict[MessageType, pygame.Color] = {
+        MessageType.DATA: pygame.Color("black"),
+        MessageType.CTS: pygame.Color("black"),
+        MessageType.RTS: pygame.Color("black"),
+        MessageType.ACK: pygame.Color("black"),
+        MessageType.JAMMING: pygame.Color("red3")
     }
