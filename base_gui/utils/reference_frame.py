@@ -15,7 +15,7 @@ def scale_pixels_to_meters(value, reverse=False):
 def scale_tuple_pix2meter(coord, reverse=False):
     return (
         scale_pixels_to_meters(coord[0], reverse),
-        scale_pixels_to_meters(coord[1], reverse)
+        scale_pixels_to_meters(coord[1], reverse),
     )
 
 
