@@ -66,7 +66,7 @@ class Node(object):
                 self.add_wavefront(0, minmax_donut[1], message_types[index])
 
     def add_wavefront(self, min_radius, max_radius, message_type):
-        color = self.message_color(message_type)
+        color = SimConsts.MESSAGE_COLOR_DICT[message_type]
 
         self.waves.append(
             Wave(self.screen,
@@ -92,11 +92,3 @@ class Node(object):
         assert self.waves is not None
         for wave in self.waves:
             wave.render()
-
-    def message_color(self, message_type):
-
-        if message_type == MessageType.JAMMING:
-            return pygame.Color("red3")
-        else:
-            return pygame.Color("black")
-            #np.array([120, 120, 120])
