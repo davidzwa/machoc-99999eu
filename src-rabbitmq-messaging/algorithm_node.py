@@ -135,8 +135,8 @@ class AlgorithmNode(BaseNode):
     def pre_ititiation_received(self, msg):
         #     self.log(
         #         "received initiation list of length ({})".format(len(msg.payload)))
-        msg.payload.remove(self._identifier)
-        self._known_nodes = msg.payload
+        msg.packet_id.remove(self._identifier)
+        self._known_nodes = msg.packet_id
 
     async def initiation_received(self, msg):
         if not self._is_running:
@@ -157,7 +157,7 @@ class AlgorithmNode(BaseNode):
 
     def balance_transfer_received(self, msg: AlgorithmMessage):
         # Normal correspondence
-        transferred_balance = msg.payload[0]
+        transferred_balance = msg.packet_id[0]
         self.balance += transferred_balance
         self._channel_buffers.setdefault(
             msg.sender_node_name, []).append(transferred_balance)

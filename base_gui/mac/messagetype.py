@@ -5,4 +5,6 @@ class MessageType(Enum):
     CTS = 1,
     RTS = 2,
     ACK = 3,
-    JAMMING = 5
+    JAMMING = 5,
+    RETRANSMISSION = 6
+

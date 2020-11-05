@@ -18,10 +18,12 @@ class ImmutableMessage(object):
     prop_packet_length: float = attr.attrib()
     origin_position: np.ndarray
     # Any metadata required for proper functioning of the MAC layer. For example: RTS/CTS+data length window
-    payload: uuid.UUID
+    packet_id: uuid.UUID
     max_range: float
     type: MessageType
     prop_distance: float
+    retransmission_parent: uuid.UUID
+    retransmission_count: int
 
 
 class Message(object):
@@ -34,17 +36,21 @@ class Message(object):
                  type: MessageType,
                  prop_packet_length: float,
                  origin: np.ndarray,
-                 payload: Any,
-                 max_range: float):
+                 packet_id: Any,
+                 max_range: float,
+                 retransmission_parent: Any,
+                 retransmission_count: int):
         # Propagation time converted to travel length (relatable to frame length)
         assert prop_packet_length > 0.0
         self.prop_packet_length: float = prop_packet_length
         # Any metadata required for proper functioning of the MAC layer. For example: RTS/CTS+data length window
-        self.payload = payload
+        self.packet_id = packet_id
         self.max_range = max_range
         self.type = type
         self.origin_position = origin
         self.prop_distance = 0.0  # Current head of wave, dynamic
+        self.retransmission_parent = retransmission_parent
+        self.retransmission_count = retransmission_count
 
     def message_travel(self, delta_distance):
         self.prop_distance += delta_distance
@@ -53,10 +59,12 @@ class Message(object):
         return ImmutableMessage(
             self.prop_packet_length,
             self.origin_position,
-            self.payload,
+            self.packet_id,
             self.max_range,
             self.type,
-            self.prop_distance
+            self.prop_distance,
+            self.retransmission_parent,
+            self.retransmission_count
         )
 
     def get_distance_travelled(self):
