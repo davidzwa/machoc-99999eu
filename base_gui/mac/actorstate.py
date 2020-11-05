@@ -28,6 +28,11 @@ class FrozenActorState(object):
     queued_messages: typing.Tuple[ImmutableMessage]
     in_transit_messages: typing.Tuple[ImmutableMessage]
 
+    num_successful_transmissions: int
+    num_transmission_attempts: int
+    num_collisions: int
+    num_dropped_messages: int
+
 
 class ActorState(object):
     def __init__(self, identifier, time, position,
@@ -85,7 +90,11 @@ class ActorState(object):
             identifier=self.identifier,
             queued_messages=tuple(frozen_queue_items),
             in_transit_messages=tuple(frozen_transit_items),
-            neighbour_messages_carriersense=tuple(frozen_neighbour_items)
+            neighbour_messages_carriersense=tuple(frozen_neighbour_items),
+            num_collisions=self.num_collisions,
+            num_dropped_messages=self.num_dropped_messages,
+            num_successful_transmissions=self.num_successful_transmissions,
+            num_transmission_attempts=self.num_transmission_attempts
         )
 
     def can_transmit(self, message: Message) -> CarrierSenseState:
@@ -158,19 +167,21 @@ class ActorState(object):
 
         elif self.state == MacState.READY_TO_TRANSMIT:
             if not self.any_neighbour_message_arriving():
-
                 self.in_transit_messages.put(self.queued_messages.get())
+                self.num_transmission_attempts += 1
                 next_state = MacState.TRANSMITTING
 
         elif self.state == MacState.TRANSMITTING:
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
+                self.num_successful_transmissions += 1
                 if self.queued_messages.qsize() > 0:
                     next_state = MacState.READY_TO_TRANSMIT
                 else:
                     next_state = MacState.IDLE
 
             elif self.any_neighbour_message_arriving():  # Collision detected
+                self.num_collisions += 1
                 current_message.cut_off_message()
                 if current_message.attempt_count > self.max_attempts:    # retransmission attempt limit
                     self.drop_message = True
@@ -187,6 +198,7 @@ class ActorState(object):
                 self.wait_time = self.random_exponential_backoff(current_message)
 
                 if self.drop_message:
+                    self.num_dropped_messages += 1
                     self.drop_message = False
                     if self.queued_messages.qsize() > 0:
                         next_state = MacState.READY_TO_TRANSMIT
