@@ -70,5 +70,6 @@ class SimConsts(object):
         MessageType.CTS: pygame.Color("black"),
         MessageType.RTS: pygame.Color("black"),
         MessageType.ACK: pygame.Color("black"),
-        MessageType.JAMMING: pygame.Color("red3")
+        MessageType.JAMMING: pygame.Color("red3"),
+        MessageType.RETRANSMISSION: pygame.Color("purple")
     }

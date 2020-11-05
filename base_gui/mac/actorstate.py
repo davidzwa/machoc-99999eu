@@ -153,13 +153,16 @@ class ActorState(object):
 
         elif self.state == MacState.READY_TO_TRANSMIT:
             if not self.any_neighbour_message_arriving():
-                self.in_transit_messages.put(self.queued_messages.queue[0])
+
+                if len(self.in_transit_messages.queue) > 2:
+                    if self.in_transit_messages.queue[-2] is self.queued_messages.queue[0]:
+                        print("same objects")
+                self.in_transit_messages.put(self.queued_messages.get())
                 next_state = MacState.TRANSMITTING
 
         elif self.state == MacState.TRANSMITTING:
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
-                del self.queued_messages.queue[0]  # message transmitted succesfully, so remove it form the queue
                 if self.queued_messages.qsize() > 0:
                     next_state = MacState.READY_TO_TRANSMIT
                 else:
@@ -167,6 +170,8 @@ class ActorState(object):
 
             elif self.any_neighbour_message_arriving():  # Collision detected
                 current_message.cut_off_message()
+                self.queue_retransmission(current_message)
+
                 self.jamming_message()
                 next_state = MacState.JAMMING
 
@@ -182,6 +187,9 @@ class ActorState(object):
                 next_state = MacState.READY_TO_TRANSMIT
 
         self.state = next_state
+
+        if self.identifier == "N1" and self.queued_messages.qsize():
+            print("test")
 
     def check_message_transmitting(self):
         transmitting = 0
@@ -204,8 +212,10 @@ class ActorState(object):
             type=MessageType.DATA,
             prop_packet_length=self.data_packet_length,
             origin=self.position,
-            payload=uuid.uuid4(),
-            max_range=self.max_transmission_range
+            packet_id=uuid.uuid4(),
+            max_range=self.max_transmission_range,
+            retransmission_parent=0,
+            retransmission_count=0
         )
         self.queued_messages.put(msg)
 
@@ -216,8 +226,23 @@ class ActorState(object):
             type=MessageType.JAMMING,
             prop_packet_length=self.jamming_packet_length,
             origin=self.position,
-            payload=uuid.uuid4(),
-            max_range=self.max_transmission_range
-        )
+            packet_id=uuid.uuid4(),
+            max_range=self.max_transmission_range,
+            retransmission_parent=0,
+            retransmission_count=0
 
+        )
         self.in_transit_messages.put(msg)
+
+    def queue_retransmission(self, message):
+
+        msg = Message(
+            type=MessageType.RETRANSMISSION,
+            prop_packet_length=self.data_packet_length,
+            origin=self.position,
+            packet_id=uuid.uuid4(),
+            max_range=self.max_transmission_range,
+            retransmission_parent=message.packet_id,
+            retransmission_count=message.retransmission_count + 1
+        )
+        self.queued_messages.queue.appendleft(msg)
