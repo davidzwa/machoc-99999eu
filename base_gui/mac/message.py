@@ -23,7 +23,7 @@ class ImmutableMessage(object):
     type: MessageType
     prop_distance: float
     retransmission_parent: uuid.UUID
-    retransmission_count: int
+    attempt_count: int
 
 
 class Message(object):
@@ -39,7 +39,7 @@ class Message(object):
                  packet_id: Any,
                  max_range: float,
                  retransmission_parent: Any,
-                 retransmission_count: int):
+                 attempt_count: int):
         # Propagation time converted to travel length (relatable to frame length)
         assert prop_packet_length > 0.0
         self.prop_packet_length: float = prop_packet_length
@@ -50,7 +50,7 @@ class Message(object):
         self.origin_position = origin
         self.prop_distance = 0.0  # Current head of wave, dynamic
         self.retransmission_parent = retransmission_parent
-        self.retransmission_count = retransmission_count
+        self.attempt_count = attempt_count
 
     def message_travel(self, delta_distance):
         self.prop_distance += delta_distance
@@ -64,7 +64,7 @@ class Message(object):
             self.type,
             self.prop_distance,
             self.retransmission_parent,
-            self.retransmission_count
+            self.attempt_count
         )
 
     def get_distance_travelled(self):
