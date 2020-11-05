@@ -53,9 +53,8 @@ class SimConsts(object):
     NUM_NODES_ROUTING = 5
     DISTANCE_SPREAD_SIGMA_ROUTING = 30
 
-    # RANDOM BACKOFF LIMITS
-    MIN_WAIT_TIME = 1
-    MAX_WAIT_TIME = 6
+    # MAXIMAL NUMBER OF RETRANSMISSION ATTEMPTS BEFORE DROPPIING THE PACKAGE
+    MAX_ATTEMPTS = 7
 
     STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
         MacState.IDLE: pygame.Color("gray"),

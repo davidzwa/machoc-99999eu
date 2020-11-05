@@ -35,8 +35,7 @@ class ActorState(object):
                  data_packet_length=SimConsts.PACKET_LENGTH_SPACE,
                  jamming_packet_length=SimConsts.JAMMING_LENGTH_SPACE,
                  time_step=SimConsts.TIME_STEP,
-                 min_wait_time=SimConsts.MIN_WAIT_TIME,
-                 max_wait_time=SimConsts.MAX_WAIT_TIME):
+                 max_attempts=SimConsts.MAX_ATTEMPTS):
 
         self.identifier = identifier
         self.time = time
@@ -57,9 +56,13 @@ class ActorState(object):
 
         self.time_step = time_step
 
-        self.min_wait_time = min_wait_time
-        self.max_wait_time = max_wait_time
+        self.max_attempts = max_attempts
         self.wait_time = 0
+
+        self.num_successful_transmissions = 0
+        self.num_transmission_attempts = 0
+        self.num_collisions = 0
+        self.num_dropped_messages = 0
 
     def add_neighbour_state(self, state: 'ActorState'):
         if state not in self.neighbour_states:
@@ -178,7 +181,7 @@ class ActorState(object):
         elif self.state == MacState.JAMMING:
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
-                self.wait_time = random.randint(self.min_wait_time, self.max_wait_time)
+                self.wait_time = self.random_exponential_backoff(current_message)
                 next_state = MacState.WAIT
 
         elif self.state == MacState.WAIT:
@@ -187,9 +190,6 @@ class ActorState(object):
                 next_state = MacState.READY_TO_TRANSMIT
 
         self.state = next_state
-
-        if self.identifier == "N1" and self.queued_messages.qsize():
-            print("test")
 
     def check_message_transmitting(self):
         transmitting = 0
@@ -246,3 +246,13 @@ class ActorState(object):
             retransmission_count=message.retransmission_count + 1
         )
         self.queued_messages.queue.appendleft(msg)
+
+    def random_exponential_backoff(self, message) -> int:
+        min_wait_time = 1
+
+        if message.retransmission_count <= 5:
+            max_wait_time = pow(2, 3 + message.retransmission_count) - 1
+        else:
+            max_wait_time = 255
+
+        return random.randint(min_wait_time, max_wait_time)
