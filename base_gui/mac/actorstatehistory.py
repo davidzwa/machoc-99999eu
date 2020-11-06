@@ -4,7 +4,6 @@ from typing import List
 import numpy as np
 
 from base_gui.mac.actorstate import ActorState, FrozenActorState
-from base_gui.mac.message import Message, MessageType, MESSAGE_DISTANCE_PER_TIME
 
 
 class ActorStateHistory(object):

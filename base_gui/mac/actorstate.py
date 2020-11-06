@@ -146,15 +146,25 @@ class ActorState(object):
 
     def progress_actorstate_time(self, new_message: bool) -> typing.Any:
 
-        # propogate messages
+
+        #
+        # for message in self.in_transit_messages.queue:
+        #      message.prop_distance += self.time_step * MESSAGE_DISTANCE_PER_TIME
+        #     if message.check_message_done():
+        #         outofrange_messages.append(message)
+        # # Convert time to find new distance of message: head of wave
+        # self.time += self.time_step
+        # self.purge_outofrange_messages(outofrange_messages)  # TODO purge + cutoff
+
+        # propagate messages
         outofrange_messages = list()
         for message in self.in_transit_messages.queue:
-            message.prop_distance += self.time_step * MESSAGE_DISTANCE_PER_TIME
-            if message.check_message_done():
+            if message.propagate(self.time_step):
                 outofrange_messages.append(message)
-        # Convert time to find new distance of message: head of wave
+
         self.time += self.time_step
-        self.purge_outofrange_messages(outofrange_messages)  # TODO purge + cutoff
+        self.purge_outofrange_messages(outofrange_messages)
+
 
         if new_message:
             self.new_arrival()
@@ -172,6 +182,8 @@ class ActorState(object):
                 next_state = MacState.TRANSMITTING
 
         elif self.state == MacState.TRANSMITTING:
+            if not self.in_transit_messages.qsize():
+                print("oeps")
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
                 self.num_successful_transmissions += 1
@@ -183,7 +195,7 @@ class ActorState(object):
             elif self.any_neighbour_message_arriving():  # Collision detected
                 self.num_collisions += 1
                 current_message.cut_off_message()
-                if current_message.attempt_count > self.max_attempts:    # retransmission attempt limit
+                if current_message.attempt_count > self.max_attempts:  # retransmission attempt limit
                     self.drop_message = True
                 else:
                     self.queue_retransmission(current_message)
