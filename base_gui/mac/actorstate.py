@@ -149,7 +149,7 @@ class ActorState(object):
         # propogate messages
         outofrange_messages = list()
         for message in self.in_transit_messages.queue:
-            message.prop_distance += self.time_step / MESSAGE_DISTANCE_PER_TIME
+            message.prop_distance += self.time_step * MESSAGE_DISTANCE_PER_TIME
             if message.check_message_done():
                 outofrange_messages.append(message)
         # Convert time to find new distance of message: head of wave
