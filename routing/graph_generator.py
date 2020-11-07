@@ -416,5 +416,5 @@ class GraphGenerator(FigureCanvas):
 
         # Draw graph
         pos = nx.get_node_attributes(self.graph, 'pos')
-        nx.draw(self.graph, pos, labels=labels, ax=self.axes)
+        nx.draw(self.graph, pos, labels=labels, font_color='white', ax=self.axes)
         self.draw()
