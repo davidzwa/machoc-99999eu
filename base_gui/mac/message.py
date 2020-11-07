@@ -8,7 +8,6 @@ from base_gui.constants import SimConsts
 from base_gui.mac.messagetype import MessageType
 
 
-
 @attr.attrs(auto_attribs=True, frozen=True)
 class ImmutableMessage(object):
     """
@@ -121,9 +120,6 @@ class Message(object):
 
         return 0
 
-
-
-
         # outofrange_messages = list()
         # for message in self.in_transit_messages.queue:
         #      message.prop_distance += self.time_step * MESSAGE_DISTANCE_PER_TIME
@@ -132,7 +128,6 @@ class Message(object):
         # # Convert time to find new distance of message: head of wave
         # self.time += self.time_step
         # self.purge_outofrange_messages(outofrange_messages)  # TODO purge + cutoff
-
 
     # def __del__(self):
     #     pass

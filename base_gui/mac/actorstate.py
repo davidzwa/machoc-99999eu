@@ -155,7 +155,6 @@ class ActorState(object):
         self.time += self.time_step
         self.purge_outofrange_messages(outofrange_messages)
 
-
         if new_message:
             self.new_arrival()
 
@@ -172,8 +171,6 @@ class ActorState(object):
                 next_state = MacState.TRANSMITTING
 
         elif self.state == MacState.TRANSMITTING:
-            if not self.in_transit_messages.qsize():
-                print("oeps")
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
                 self.num_successful_transmissions += 1
@@ -209,7 +206,6 @@ class ActorState(object):
 
                     self.wait_time = self.random_exponential_backoff(self.queued_messages.queue[0])
                     next_state = MacState.WAIT
-
 
         elif self.state == MacState.WAIT:
             self.wait_time -= 1
