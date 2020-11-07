@@ -37,22 +37,22 @@ SCREEN_SIZE = Vector2(SIM_SIZE.x + NAV_WIDTH, SIM_SIZE.y + BOTTOM_HEIGHT)
 
 
 class SimConsts(object):
-    TIME_MAX_STEPS = 250
+    TIME_MAX_STEPS = 1000
     TIME_STEP = 1
 
     # MAC SIMULATION PARAMETERS
-    NUM_NODES_MAC = 3
+    NUM_NODES_MAC = 10
     DISTANCE_SPREAD_SIGMA_MAC = 250
 
-    M_TO_LIGHTSECONDS = 1 / 300000000
-    BIT_LENGTH_SPACE = 0.6  # meters
-    PACKET_LENGTH = 11000
-    PACKET_LENGTH_SPACE = 6    # meters
-    JAMMING_LENGTH_SPACE = 1    # meters
-    TRANSMISSION_RANGE = 50     # meters
-    WAVE_VELOCITY = 1           # meters per timestep
-    TRANSMISSION_CHANCE_PER_SECOND = 0.03
-    TRANSMISSION_CHANCE = TRANSMISSION_CHANCE_PER_SECOND
+    WAVE_VELOCITY = 1  # meters per timestep
+
+    PACKET_LENGTH_SPACE = 10  # meters
+    JAMMING_LENGTH_SPACE = 1  # meters
+
+    TRANSMISSION_RANGE = 20  # meters
+
+    TRANSMISSION_CHANCE = 0.005  # Transmission chance per timestep
+
     WAVES_DENSITY = 2
 
     # ROUTING SIMULATION PARAMETERS
@@ -60,7 +60,7 @@ class SimConsts(object):
     DISTANCE_SPREAD_SIGMA_ROUTING = 30
 
     # MAXIMAL NUMBER OF RETRANSMISSION ATTEMPTS BEFORE DROPPIING THE PACKAGE
-    MAX_ATTEMPTS = 7
+    MAX_ATTEMPTS = 10
 
     STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
         MacState.IDLE: pygame.Color("gray"),
