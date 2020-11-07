@@ -57,7 +57,7 @@ def mouse_in_frame(mouse_coord, rect):
 
 
 if __name__ == '__main__':
-    np.random.seed(1)  # Fix seed for debugging purposes
+    np.random.seed(0)  # Fix seed for debugging purposes
 
     guiSimMac = construct_simulation(SimType.MAC)
     guiSimRouting = construct_simulation(SimType.ROUTING)
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         # RENDER - Update text by grabbing guiSim children
         font_surface = guiSim.font.render("Number of nodes: {} ".format(sliderVal), True, pygame.Color("black"))
         guiSim.screen.blit(font_surface, dest=(guiSim.timeline.nodes_slider.x, guiSim.timeline.nodes_slider.y + 20))
-        font_surface = guiSim.font.render("Current time: {} sec".format(timeVal), True, pygame.Color("black"))
+        font_surface = guiSim.font.render("Current time: {} steps".format(timeVal), True, pygame.Color("black"))
         guiSim.screen.blit(font_surface, dest=(guiSim.timeline.time_slider.x, guiSim.timeline.time_slider.y + 20))
 
         ### PROCESS mouse & RENDER WAVE and NODES

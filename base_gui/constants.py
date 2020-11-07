@@ -51,7 +51,7 @@ class SimConsts(object):
 
     TRANSMISSION_RANGE = 20  # meters
 
-    TRANSMISSION_CHANCE = 0.005  # Transmission chance per timestep
+    TRANSMISSION_CHANCE = 0.01  # Transmission chance per timestep
 
     WAVES_DENSITY = 2
 
@@ -60,7 +60,7 @@ class SimConsts(object):
     DISTANCE_SPREAD_SIGMA_ROUTING = 30
 
     # MAXIMAL NUMBER OF RETRANSMISSION ATTEMPTS BEFORE DROPPIING THE PACKAGE
-    MAX_ATTEMPTS = 10
+    MAX_ATTEMPTS = 6
 
     STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
         MacState.IDLE: pygame.Color("gray"),
