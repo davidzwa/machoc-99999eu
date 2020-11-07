@@ -1,3 +1,4 @@
+import statistics
 from typing import List
 
 import numpy as np
@@ -103,6 +104,38 @@ class Oracle(object):
                 self.sim_history[time_index][index] = time_actorstate
         print("Simulation resulted in {} states stored in 'sim_history'".format(self.sim_history.size))
 
+        final_statistics = Statistics()
+        print("simulation results:")
+        for actor_index, actor in enumerate(self.actors):
+            stats = self.sim_history[-1][actor_index]
+            print("node: {}".format(actor_index))
+            print("number of collisions: {}".format(stats.num_collisions))
+            print("number of dropped messages: {}".format(stats.num_dropped_messages))
+            print("number of succesfull transmissions: {}".format(stats.num_successful_transmissions))
+            print("number of transmission attempts: {}".format(stats.num_transmission_attempts))
+            print("transmission times: {}".format(stats.transmission_times))
+
+            final_statistics.transmission_times.extend(stats.transmission_times)
+            final_statistics.num_collisions += stats.num_collisions
+            final_statistics.num_dropped_messages += stats.num_dropped_messages
+            final_statistics.num_successful_transmissions += stats.num_successful_transmissions
+            final_statistics.num_transmission_attempts += stats.num_transmission_attempts
+
+        final_statistics.transmission_time_stats()
+        print("final counts")
+        print("number of collisions: {}".format(final_statistics.num_collisions))
+        print("number of dropped messages: {}".format(final_statistics.num_dropped_messages))
+        print("number of succesfull transmissions: {}".format(final_statistics.num_successful_transmissions))
+        print("number of transmission attempts: {}".format(final_statistics.num_transmission_attempts))
+
+        print("transmission time statistics")
+        print("min: {}\nmax: {}\nmean: {}".format(final_statistics.transmission_times_min,
+                                                  final_statistics.transmission_times_max,
+                                                  final_statistics.transmission_times_mean))
+        print("times: {}".format(final_statistics.transmission_times))
+
+        pass
+
         # Store (optional)
         # - store as JSON with parameters
 
@@ -124,3 +157,29 @@ if __name__ == '__main__':
     # for state in actor.history:
     #     print(len(state.queued_messages))
     print("Oracle done simulating.")
+
+
+class Statistics:
+    num_collisions: int
+    num_dropped_messages: int
+    num_successful_transmissions: int
+    num_transmission_attempts: int
+
+    transmission_times: list
+
+    def __init__(self):
+        self.num_collisions = 0
+        self.num_dropped_messages = 0
+        self.num_successful_transmissions = 0
+        self.num_transmission_attempts = 0
+
+        self.transmission_times = list()
+        self.transmission_times_min = 0
+        self.transmission_times_max = 0
+        self.transmission_times_mean = 0
+
+    def transmission_time_stats(self):
+        self.transmission_times.sort()
+        self.transmission_times_min = min(self.transmission_times)
+        self.transmission_times_max = max(self.transmission_times)
+        self.transmission_times_mean = statistics.mean(self.transmission_times)

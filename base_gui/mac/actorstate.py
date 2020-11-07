@@ -33,6 +33,8 @@ class FrozenActorState(object):
     num_collisions: int
     num_dropped_messages: int
 
+    transmission_times: list
+
 
 class ActorState(object):
     def __init__(self, identifier, time, position,
@@ -69,6 +71,8 @@ class ActorState(object):
         self.num_collisions = 0
         self.num_dropped_messages = 0
 
+        self.transmission_times = list()
+
         self.drop_message = False
 
     def add_neighbour_state(self, state: 'ActorState'):
@@ -94,7 +98,8 @@ class ActorState(object):
             num_collisions=self.num_collisions,
             num_dropped_messages=self.num_dropped_messages,
             num_successful_transmissions=self.num_successful_transmissions,
-            num_transmission_attempts=self.num_transmission_attempts
+            num_transmission_attempts=self.num_transmission_attempts,
+            transmission_times=self.transmission_times
         )
 
     def can_transmit(self, message: Message) -> CarrierSenseState:
@@ -165,6 +170,10 @@ class ActorState(object):
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
                 self.num_successful_transmissions += 1
+
+                transmission_time = self.time - current_message.original_start_time
+                self.transmission_times.append(transmission_time)
+
                 if self.queued_messages.qsize() > 0:
                     next_state = MacState.READY_TO_TRANSMIT
                 else:
@@ -204,6 +213,7 @@ class ActorState(object):
                 next_state = MacState.READY_TO_TRANSMIT
 
         self.state = next_state
+        self.time += self.time_step
 
     def check_message_transmitting(self):
         transmitting = 0
@@ -219,6 +229,7 @@ class ActorState(object):
         for message in done_messages:
             LOGGER.debug("Deleted message at time {} with prop. distance {} [m].".format(self.time,
                                                                                          message.get_distance_travelled()))
+
             self.in_transit_messages.queue.remove(message)
 
     def new_arrival(self):
@@ -229,7 +240,8 @@ class ActorState(object):
             packet_id=uuid.uuid4(),
             max_range=self.max_transmission_range,
             retransmission_parent=0,
-            attempt_count=1
+            attempt_count=1,
+            original_start_time=self.time
         )
         self.queued_messages.put(msg)
 
@@ -243,7 +255,8 @@ class ActorState(object):
             packet_id=uuid.uuid4(),
             max_range=self.max_transmission_range,
             retransmission_parent=0,
-            attempt_count=1
+            attempt_count=1,
+            original_start_time=self.time
 
         )
         self.in_transit_messages.put(msg)
@@ -257,7 +270,8 @@ class ActorState(object):
             packet_id=uuid.uuid4(),
             max_range=self.max_transmission_range,
             retransmission_parent=message.packet_id,
-            attempt_count=message.attempt_count + 1
+            attempt_count=message.attempt_count + 1,
+            original_start_time=message.original_start_time
         )
         self.queued_messages.queue.appendleft(msg)
 
@@ -281,5 +295,4 @@ class ActorState(object):
             if message.propagate(self.time_step):
                 outofrange_messages.append(message)
 
-        self.time += self.time_step
         self.purge_outofrange_messages(outofrange_messages)

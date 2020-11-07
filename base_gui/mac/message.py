@@ -22,6 +22,7 @@ class ImmutableMessage(object):
     prop_distance: float
     retransmission_parent: uuid.UUID
     attempt_count: int
+    original_start_time: int
 
 
 class Message(object):
@@ -38,6 +39,7 @@ class Message(object):
                  max_range: float,
                  retransmission_parent: Any,
                  attempt_count: int,
+                 original_start_time: int,
                  wave_velocity=SimConsts.WAVE_VELOCITY):
 
         # Propagation time converted to travel length (relatable to frame length)
@@ -51,6 +53,7 @@ class Message(object):
         self.prop_distance = 0.0  # Current head of wave, dynamic
         self.retransmission_parent = retransmission_parent
         self.attempt_count = attempt_count
+        self.original_start_time = original_start_time
 
         self.wave_velocity = wave_velocity
 
@@ -66,7 +69,8 @@ class Message(object):
             self.type,
             self.prop_distance,
             self.retransmission_parent,
-            self.attempt_count
+            self.attempt_count,
+            self.original_start_time
         )
 
     def get_distance_travelled(self):
