@@ -10,7 +10,7 @@ import attr
 from base_gui.app_logging import LOGGER
 from base_gui.constants import SimConsts
 from base_gui.mac.macstate import MacState
-from base_gui.mac.message import Message, MESSAGE_DISTANCE_PER_TIME, ImmutableMessage, MessageType
+from base_gui.mac.message import Message, ImmutableMessage, MessageType
 
 
 class CarrierSenseState(Enum):
@@ -145,16 +145,6 @@ class ActorState(object):
         return False
 
     def progress_actorstate_time(self, new_message: bool) -> typing.Any:
-
-
-        #
-        # for message in self.in_transit_messages.queue:
-        #      message.prop_distance += self.time_step * MESSAGE_DISTANCE_PER_TIME
-        #     if message.check_message_done():
-        #         outofrange_messages.append(message)
-        # # Convert time to find new distance of message: head of wave
-        # self.time += self.time_step
-        # self.purge_outofrange_messages(outofrange_messages)  # TODO purge + cutoff
 
         # propagate messages
         outofrange_messages = list()

@@ -7,7 +7,6 @@ import numpy as np
 from base_gui.constants import SimConsts
 from base_gui.mac.messagetype import MessageType
 
-MESSAGE_DISTANCE_PER_TIME = 1.0     #1m per lightmeter    # One distance unit per time unit
 
 
 @attr.attrs(auto_attribs=True, frozen=True)
@@ -40,7 +39,7 @@ class Message(object):
                  max_range: float,
                  retransmission_parent: Any,
                  attempt_count: int,
-                 wave_velocity = SimConsts.WAVE_VELOCITY):
+                 wave_velocity=SimConsts.WAVE_VELOCITY):
 
         # Propagation time converted to travel length (relatable to frame length)
         assert prop_packet_length > 0.0
@@ -114,7 +113,7 @@ class Message(object):
 
         if self.check_message_done():
             overshot = self.prop_distance - self.max_range
-            if overshot > self.prop_packet_length:  #entire message is out of range, return 1 to purge message
+            if overshot > self.prop_packet_length:  # entire message is out of range, return 1 to purge message
                 return 1
             else:
                 self.prop_packet_length -= overshot
