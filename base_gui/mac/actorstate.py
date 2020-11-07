@@ -146,15 +146,6 @@ class ActorState(object):
 
     def progress_actorstate_time(self, new_message: bool) -> typing.Any:
 
-        # propagate messages
-        outofrange_messages = list()
-        for message in self.in_transit_messages.queue:
-            if message.propagate(self.time_step):
-                outofrange_messages.append(message)
-
-        self.time += self.time_step
-        self.purge_outofrange_messages(outofrange_messages)
-
         if new_message:
             self.new_arrival()
 
@@ -281,3 +272,14 @@ class ActorState(object):
         wait_time = random.randint(min_wait_time, max_wait_time)
 
         return wait_time
+
+    def prop_messages(self):
+        # propagate messages
+
+        outofrange_messages = list()
+        for message in self.in_transit_messages.queue:
+            if message.propagate(self.time_step):
+                outofrange_messages.append(message)
+
+        self.time += self.time_step
+        self.purge_outofrange_messages(outofrange_messages)

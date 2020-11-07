@@ -31,3 +31,6 @@ class ActorStateHistory(object):
 
     def progress_time(self, new_message):
         self.state.progress_actorstate_time(new_message)
+
+    def prop_messages(self):
+        self.state.prop_messages()

@@ -85,11 +85,15 @@ class Oracle(object):
         # - Increment time (by delta)
         for time_index in range(0, self.time_steps):
             # print("time {}".format(self.delta_time * time_index))
-            # 1) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
+            # 1) propagate waves
+            for actor in self.actors:
+                actor.prop_messages()
+
+            # 2) Transform state, flatten list and store list of state of nodes in 2D time-node state matrix
             # - Update any nodes with outstanding 'arrivals', MAC update and/or 'out-of-range messages'
             for actor_index, actor in enumerate(self.actors):
                 actor.progress_time(self.timenode_istransmitting_random[time_index][actor_index])
-            # 2) Save state
+            # 3) Save state
             for actor in self.actors:
                 actor.save_state_to_history()
         # Flatten result
