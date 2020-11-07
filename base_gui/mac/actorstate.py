@@ -197,7 +197,6 @@ class ActorState(object):
         elif self.state == MacState.JAMMING:
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
-                self.wait_time = self.random_exponential_backoff(current_message)
 
                 if self.drop_message:
                     self.num_dropped_messages += 1
@@ -207,12 +206,14 @@ class ActorState(object):
                     else:
                         next_state = MacState.IDLE
                 else:
+
+                    self.wait_time = self.random_exponential_backoff(self.queued_messages.queue[0])
                     next_state = MacState.WAIT
 
 
         elif self.state == MacState.WAIT:
             self.wait_time -= 1
-            if not self.wait_time:
+            if self.wait_time <= 0:
                 next_state = MacState.READY_TO_TRANSMIT
 
         self.state = next_state
@@ -277,8 +278,10 @@ class ActorState(object):
         min_wait_time = 1
 
         if message.attempt_count <= 6:
-            max_wait_time = pow(2, 2 + message.attempt_count) - 1
+            max_wait_time = pow(2, (2 + message.attempt_count)) - 1
         else:
             max_wait_time = 255
 
-        return random.randint(min_wait_time, max_wait_time)
+        wait_time = random.randint(min_wait_time, max_wait_time)
+
+        return wait_time
