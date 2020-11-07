@@ -65,7 +65,7 @@ class SimConsts(object):
     STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
         MacState.IDLE: pygame.Color("gray"),
         MacState.READY_TO_TRANSMIT: pygame.Color("blue"),
-        MacState.WAIT: pygame.Color("yellow"),
+        MacState.WAIT: pygame.Color("green"),
         MacState.TRANSMITTING: pygame.Color("purple"),
         MacState.JAMMING: pygame.Color("red")
     }
@@ -76,5 +76,5 @@ class SimConsts(object):
         MessageType.RTS: pygame.Color("black"),
         MessageType.ACK: pygame.Color("black"),
         MessageType.JAMMING: pygame.Color("red3"),
-        MessageType.RETRANSMISSION: pygame.Color("purple")
+        MessageType.RETRANSMISSION: pygame.Color("blue")
     }
