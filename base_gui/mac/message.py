@@ -4,10 +4,8 @@ from typing import Any
 import attr
 import numpy as np
 
+from base_gui.constants import SimConsts
 from base_gui.mac.messagetype import MessageType
-
-MESSAGE_DISTANCE_PER_TIME = 1.0  # One distance unit per time unit
-
 
 
 @attr.attrs(auto_attribs=True, frozen=True)
@@ -23,7 +21,7 @@ class ImmutableMessage(object):
     type: MessageType
     prop_distance: float
     retransmission_parent: uuid.UUID
-    retransmission_count: int
+    attempt_count: int
 
 
 class Message(object):
@@ -39,7 +37,9 @@ class Message(object):
                  packet_id: Any,
                  max_range: float,
                  retransmission_parent: Any,
-                 retransmission_count: int):
+                 attempt_count: int,
+                 wave_velocity=SimConsts.WAVE_VELOCITY):
+
         # Propagation time converted to travel length (relatable to frame length)
         assert prop_packet_length > 0.0
         self.prop_packet_length: float = prop_packet_length
@@ -50,7 +50,9 @@ class Message(object):
         self.origin_position = origin
         self.prop_distance = 0.0  # Current head of wave, dynamic
         self.retransmission_parent = retransmission_parent
-        self.retransmission_count = retransmission_count
+        self.attempt_count = attempt_count
+
+        self.wave_velocity = wave_velocity
 
     def message_travel(self, delta_distance):
         self.prop_distance += delta_distance
@@ -64,7 +66,7 @@ class Message(object):
             self.type,
             self.prop_distance,
             self.retransmission_parent,
-            self.retransmission_count
+            self.attempt_count
         )
 
     def get_distance_travelled(self):
@@ -104,6 +106,28 @@ class Message(object):
         """
         assert self.check_message_transmitting()
         self.prop_packet_length = self.prop_distance
+
+    def propagate(self, delta_time_step) -> int:
+        self.prop_distance += delta_time_step * self.wave_velocity
+
+        if self.check_message_done():
+            overshot = self.prop_distance - self.max_range
+            if overshot > self.prop_packet_length:  # entire message is out of range, return 1 to purge message
+                return 1
+            else:
+                self.prop_packet_length -= overshot
+                self.prop_distance = self.max_range
+
+        return 0
+
+        # outofrange_messages = list()
+        # for message in self.in_transit_messages.queue:
+        #      message.prop_distance += self.time_step * MESSAGE_DISTANCE_PER_TIME
+        #     if message.check_message_done():
+        #         outofrange_messages.append(message)
+        # # Convert time to find new distance of message: head of wave
+        # self.time += self.time_step
+        # self.purge_outofrange_messages(outofrange_messages)  # TODO purge + cutoff
 
     # def __del__(self):
     #     pass

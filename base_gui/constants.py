@@ -37,30 +37,35 @@ SCREEN_SIZE = Vector2(SIM_SIZE.x + NAV_WIDTH, SIM_SIZE.y + BOTTOM_HEIGHT)
 
 
 class SimConsts(object):
-    TIME_MAX_STEPS = 250
+    TIME_MAX_STEPS = 1000
     TIME_STEP = 1
 
     # MAC SIMULATION PARAMETERS
-    NUM_NODES_MAC = 3
+    NUM_NODES_MAC = 10
     DISTANCE_SPREAD_SIGMA_MAC = 250
-    PACKET_LENGTH_SPACE = 3
-    JAMMING_LENGTH_SPACE = 6
-    TRANSMISSION_RANGE = 50
-    TRANSMISSION_CHANCE = 0.03
+
+    WAVE_VELOCITY = 1  # meters per timestep
+
+    PACKET_LENGTH_SPACE = 10  # meters
+    JAMMING_LENGTH_SPACE = 1  # meters
+
+    TRANSMISSION_RANGE = 20  # meters
+
+    TRANSMISSION_CHANCE = 0.005  # Transmission chance per timestep
+
     WAVES_DENSITY = 2
 
     # ROUTING SIMULATION PARAMETERS
     NUM_NODES_ROUTING = 5
     DISTANCE_SPREAD_SIGMA_ROUTING = 30
 
-    # RANDOM BACKOFF LIMITS
-    MIN_WAIT_TIME = 1
-    MAX_WAIT_TIME = 6
+    # MAXIMAL NUMBER OF RETRANSMISSION ATTEMPTS BEFORE DROPPIING THE PACKAGE
+    MAX_ATTEMPTS = 10
 
     STATE_COLOR_DICT: Dict[MacState, pygame.Color] = {
         MacState.IDLE: pygame.Color("gray"),
         MacState.READY_TO_TRANSMIT: pygame.Color("blue"),
-        MacState.WAIT: pygame.Color("yellow"),
+        MacState.WAIT: pygame.Color("green"),
         MacState.TRANSMITTING: pygame.Color("purple"),
         MacState.JAMMING: pygame.Color("red")
     }
@@ -71,5 +76,5 @@ class SimConsts(object):
         MessageType.RTS: pygame.Color("black"),
         MessageType.ACK: pygame.Color("black"),
         MessageType.JAMMING: pygame.Color("red3"),
-        MessageType.RETRANSMISSION: pygame.Color("purple")
+        MessageType.RETRANSMISSION: pygame.Color("blue")
     }

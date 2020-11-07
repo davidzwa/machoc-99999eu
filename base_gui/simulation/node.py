@@ -1,14 +1,11 @@
 from typing import List
 
-import numpy as np
 import pygame
 from pygame import Vector2, Surface, gfxdraw
-from pygame import Vector3
 from pygame.rect import Rect
 
 from base_gui.constants import SimConsts
 from base_gui.mac.actorstate import MacState
-from base_gui.mac.messagetype import MessageType
 from base_gui.simulation.wave import Wave
 from base_gui.utils.reference_frame import vector2_global_to_local, scale_tuple_pix2meter
 

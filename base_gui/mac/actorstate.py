@@ -10,7 +10,7 @@ import attr
 from base_gui.app_logging import LOGGER
 from base_gui.constants import SimConsts
 from base_gui.mac.macstate import MacState
-from base_gui.mac.message import Message, MESSAGE_DISTANCE_PER_TIME, ImmutableMessage, MessageType
+from base_gui.mac.message import Message, ImmutableMessage, MessageType
 
 
 class CarrierSenseState(Enum):
@@ -28,6 +28,11 @@ class FrozenActorState(object):
     queued_messages: typing.Tuple[ImmutableMessage]
     in_transit_messages: typing.Tuple[ImmutableMessage]
 
+    num_successful_transmissions: int
+    num_transmission_attempts: int
+    num_collisions: int
+    num_dropped_messages: int
+
 
 class ActorState(object):
     def __init__(self, identifier, time, position,
@@ -35,8 +40,7 @@ class ActorState(object):
                  data_packet_length=SimConsts.PACKET_LENGTH_SPACE,
                  jamming_packet_length=SimConsts.JAMMING_LENGTH_SPACE,
                  time_step=SimConsts.TIME_STEP,
-                 min_wait_time=SimConsts.MIN_WAIT_TIME,
-                 max_wait_time=SimConsts.MAX_WAIT_TIME):
+                 max_attempts=SimConsts.MAX_ATTEMPTS):
 
         self.identifier = identifier
         self.time = time
@@ -57,9 +61,15 @@ class ActorState(object):
 
         self.time_step = time_step
 
-        self.min_wait_time = min_wait_time
-        self.max_wait_time = max_wait_time
+        self.max_attempts = max_attempts
         self.wait_time = 0
+
+        self.num_successful_transmissions = 0
+        self.num_transmission_attempts = 0
+        self.num_collisions = 0
+        self.num_dropped_messages = 0
+
+        self.drop_message = False
 
     def add_neighbour_state(self, state: 'ActorState'):
         if state not in self.neighbour_states:
@@ -80,7 +90,11 @@ class ActorState(object):
             identifier=self.identifier,
             queued_messages=tuple(frozen_queue_items),
             in_transit_messages=tuple(frozen_transit_items),
-            neighbour_messages_carriersense=tuple(frozen_neighbour_items)
+            neighbour_messages_carriersense=tuple(frozen_neighbour_items),
+            num_collisions=self.num_collisions,
+            num_dropped_messages=self.num_dropped_messages,
+            num_successful_transmissions=self.num_successful_transmissions,
+            num_transmission_attempts=self.num_transmission_attempts
         )
 
     def can_transmit(self, message: Message) -> CarrierSenseState:
@@ -132,15 +146,14 @@ class ActorState(object):
 
     def progress_actorstate_time(self, new_message: bool) -> typing.Any:
 
-        # propogate messages
+        # propagate messages
         outofrange_messages = list()
         for message in self.in_transit_messages.queue:
-            message.prop_distance += self.time_step / MESSAGE_DISTANCE_PER_TIME
-            if message.check_message_done():
+            if message.propagate(self.time_step):
                 outofrange_messages.append(message)
-        # Convert time to find new distance of message: head of wave
+
         self.time += self.time_step
-        self.purge_outofrange_messages(outofrange_messages)  # TODO purge + cutoff
+        self.purge_outofrange_messages(outofrange_messages)
 
         if new_message:
             self.new_arrival()
@@ -153,24 +166,27 @@ class ActorState(object):
 
         elif self.state == MacState.READY_TO_TRANSMIT:
             if not self.any_neighbour_message_arriving():
-
-                if len(self.in_transit_messages.queue) > 2:
-                    if self.in_transit_messages.queue[-2] is self.queued_messages.queue[0]:
-                        print("same objects")
                 self.in_transit_messages.put(self.queued_messages.get())
+                self.num_transmission_attempts += 1
                 next_state = MacState.TRANSMITTING
 
         elif self.state == MacState.TRANSMITTING:
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
+                self.num_successful_transmissions += 1
                 if self.queued_messages.qsize() > 0:
                     next_state = MacState.READY_TO_TRANSMIT
                 else:
                     next_state = MacState.IDLE
 
             elif self.any_neighbour_message_arriving():  # Collision detected
+                self.num_collisions += 1
                 current_message.cut_off_message()
-                self.queue_retransmission(current_message)
+                if current_message.attempt_count > self.max_attempts:  # retransmission attempt limit
+                    self.drop_message = True
+                else:
+                    self.queue_retransmission(current_message)
+                    self.drop_message = False
 
                 self.jamming_message()
                 next_state = MacState.JAMMING
@@ -178,18 +194,25 @@ class ActorState(object):
         elif self.state == MacState.JAMMING:
             current_message = self.in_transit_messages.queue[-1]
             if not current_message.check_message_transmitting():  # check if the message that is being transmitted has left the antenna
-                self.wait_time = random.randint(self.min_wait_time, self.max_wait_time)
-                next_state = MacState.WAIT
+
+                if self.drop_message:
+                    self.num_dropped_messages += 1
+                    self.drop_message = False
+                    if self.queued_messages.qsize() > 0:
+                        next_state = MacState.READY_TO_TRANSMIT
+                    else:
+                        next_state = MacState.IDLE
+                else:
+
+                    self.wait_time = self.random_exponential_backoff(self.queued_messages.queue[0])
+                    next_state = MacState.WAIT
 
         elif self.state == MacState.WAIT:
             self.wait_time -= 1
-            if not self.wait_time:
+            if self.wait_time <= 0:
                 next_state = MacState.READY_TO_TRANSMIT
 
         self.state = next_state
-
-        if self.identifier == "N1" and self.queued_messages.qsize():
-            print("test")
 
     def check_message_transmitting(self):
         transmitting = 0
@@ -215,7 +238,7 @@ class ActorState(object):
             packet_id=uuid.uuid4(),
             max_range=self.max_transmission_range,
             retransmission_parent=0,
-            retransmission_count=0
+            attempt_count=1
         )
         self.queued_messages.put(msg)
 
@@ -229,7 +252,7 @@ class ActorState(object):
             packet_id=uuid.uuid4(),
             max_range=self.max_transmission_range,
             retransmission_parent=0,
-            retransmission_count=0
+            attempt_count=1
 
         )
         self.in_transit_messages.put(msg)
@@ -243,6 +266,18 @@ class ActorState(object):
             packet_id=uuid.uuid4(),
             max_range=self.max_transmission_range,
             retransmission_parent=message.packet_id,
-            retransmission_count=message.retransmission_count + 1
+            attempt_count=message.attempt_count + 1
         )
         self.queued_messages.queue.appendleft(msg)
+
+    def random_exponential_backoff(self, message) -> int:
+        min_wait_time = 1
+
+        if message.attempt_count <= 6:
+            max_wait_time = pow(2, (2 + message.attempt_count)) - 1
+        else:
+            max_wait_time = 255
+
+        wait_time = random.randint(min_wait_time, max_wait_time)
+
+        return wait_time
