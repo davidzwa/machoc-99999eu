@@ -8,11 +8,11 @@ from pygame import Vector2
 from base_gui.mac.macstate import MacState
 from base_gui.mac.messagetype import MessageType
 
-MENU_CHECKBOX_SIMTYPE_INDEX = 0
-MENU_CHECKBOX_NODELABELS_INDEX = 1
+MENU_CHECKBOX_NODELABELS_INDEX = 0
+MENU_CHECKBOX_SIMTYPE_INDEX = 1
 MENU_CHECKBOXES_GENERIC = (
-    "MAC 0, ROUTING 1",  # Index 0
     "Hide node labels",  # Index 1
+    # "MAC 0, ROUTING 1",  # Index 0
 )
 MENU_CHECKBOX_MAC_AUTOPLAY = 0
 MENU_CHECKBOXES_MAC = (
