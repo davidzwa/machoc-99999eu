@@ -9,14 +9,16 @@ from base_gui.gui_components.game import Game
 from base_gui.mac.actorstate import FrozenActorState
 from base_gui.mac.oracle import Oracle
 from base_gui.simulation.node import Node
+from base_gui.simulation.nodelegend import NodeLegend
 
 
 class GuiSimMac(Game):
-    def __init__(self, game_size: Vector2, sim_rect, local_origin):
+    def __init__(self, game_size: Vector2, sim_rect: pygame.Rect, local_origin):
         super(GuiSimMac, self).__init__(game_size)
         self.data_nodes: List[Node]
+        self.legend_nodes: List[NodeLegend] = list()
 
-        self.sim_rect = sim_rect
+        self.sim_rect: pygame.Rect = sim_rect
         self.local_origin = local_origin
         self.oracle: Oracle
 
@@ -35,17 +37,6 @@ class GuiSimMac(Game):
                                transmission_chance=SimConsts.MESSAGE_ARRIVAL_PROBABILITY,
                                regenerate_positions=False)
 
-    # def generate_nodes_multivariate(self, num_nodes: int, cov_diag=1):
-    #     """
-    #     Generate data nodes in a multivariate normal distribution. The covariance diagonal determines
-    #     whether they distribute spherical (x=y) or diagonally. We always prefer spherical as it is most natural.
-    #     """
-    #     mean = [0, 0]
-    #     cov = [[cov_diag, 0], [0, cov_diag]]  # Spherical distribution
-    #     node_positions_np = np.random.multivariate_normal(mean, cov, num_nodes)
-    #     self.generate_nodes(node_positions_np)
-    #     LOGGER.info("Generated {} multivariate nodes 2D".format(num_nodes))
-
     def generate_nodes(self):
         """
         Generate data nodes as specified by the input data array.
@@ -62,6 +53,16 @@ class GuiSimMac(Game):
                             node_title="N{}".format(indexer))
             indexer += 1
             self.data_nodes.append(dot_node)
+
+    def generate_legend(self, start_location: Vector2, vert_offset):
+        self.legend_nodes = list()
+        count = 0
+        for key, value in SimConsts.STATE_DESCRIPTION_DICT.items():
+            new_position = Vector2(start_location.x, start_location.y + vert_offset * count)
+            new_legend_entry = NodeLegend(screen=self.screen, global_position=new_position, label=value,
+                                          labeled_state=key)
+            self.legend_nodes.append(new_legend_entry)
+            count += 1
 
     def add_nav_checkboxgroup_specific(self, sim_labels: tuple = MENU_CHECKBOXES_MAC):
         """
@@ -96,7 +97,14 @@ class GuiSimMac(Game):
 
             self.data_nodes[index].set_wavefronts(intransit_message_distances, intransit_message_types)
             self.data_nodes[index].set_color_by_state(state.macState)
-        pass
+
+    def update_node_positions(self):
+        for sim_node in self.data_nodes:
+            sim_node.update_global_position()
+
+    def render_legend(self):
+        for legend_node in self.legend_nodes:
+            legend_node.render()
 
     def render_datanodes(self):
         node_labels_state = self.get_checkbox_value(0, MENU_CHECKBOX_NODELABELS_INDEX)

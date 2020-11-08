@@ -1,5 +1,5 @@
 import enum
-from typing import Dict
+from typing import Dict, Any
 
 import pygame
 from pygame import Vector2
@@ -8,15 +8,15 @@ from pygame import Vector2
 from base_gui.mac.macstate import MacState
 from base_gui.mac.messagetype import MessageType
 
-MENU_CHECKBOX_SIMTYPE_INDEX = 0
-MENU_CHECKBOX_NODELABELS_INDEX = 1
+MENU_CHECKBOX_NODELABELS_INDEX = 0
+MENU_CHECKBOX_SIMTYPE_INDEX = 1
 MENU_CHECKBOXES_GENERIC = (
-    "MAC 0, ROUTING 1",  # Index 0
     "Hide node labels",  # Index 1
+    # "MAC 0, ROUTING 1",  # Index 0
 )
 MENU_CHECKBOX_MAC_AUTOPLAY = 0
 MENU_CHECKBOXES_MAC = (
-    "Auto-play sim",  # index 0
+    "Auto-play sim (SPACE)",  # index 0
 )
 MENU_CHECKBOXES_ROUTING = (
     "ROUTING checkbox here",
@@ -27,17 +27,35 @@ class SimType(enum.Enum):
     MAC = 0
     ROUTING = 1
 
+def get_pixel_meter_ratio():
+    return PIXELS_PER_METER
 
-PIXELS_PER_METER = 10  # Might become dynamic based on zoom later
+
+PIXELS_PER_METER = 45  # Might become dynamic based on zoom later
 SIM_MODE = SimType.MAC  # Not implemented
 NAV_WIDTH = 200
 BOTTOM_HEIGHT = 0
 SIM_SIZE = Vector2(1200, 800)
 SCREEN_SIZE = Vector2(SIM_SIZE.x + NAV_WIDTH, SIM_SIZE.y + BOTTOM_HEIGHT)
-
+AUTOPLAY_SPEED_MS = 200  # 5 steps per second
+TIMELINE_SCROLL_DEBOUNCE = 100  # minimum ticks between timeline update by LEFT/RIGHT arrows
 
 class SimConsts(object):
-    TIME_MAX_STEPS = 1000
+    @staticmethod
+    def set_num_nodes_mac(num_nodes_mac):
+        SimConsts.NUM_NODES_MAC = num_nodes_mac
+        SimConsts.set_simconsts_network_load(SimConsts.TRAFFIC_LOAD)
+
+    @staticmethod
+    def set_simconsts_network_load(network_load):
+        SimConsts.TRAFFIC_LOAD = network_load
+        SimConsts.MESSAGE_ARRIVAL_PROBABILITY = SimConsts.TRAFFIC_LOAD / SimConsts.NUM_NODES_MAC
+
+    @staticmethod
+    def get_simconsts_traffic_load():
+        return SimConsts.TRAFFIC_LOAD
+
+    TIME_MAX_STEPS = 200
     TIME_STEP = 1
 
     # MAC SIMULATION PARAMETERS
@@ -64,6 +82,15 @@ class SimConsts(object):
         MacState.WAIT: pygame.Color("green"),
         MacState.TRANSMITTING: pygame.Color("purple"),
         MacState.JAMMING: pygame.Color("red")
+    }
+
+    # Used for legend
+    STATE_DESCRIPTION_DICT: Dict[MacState, Any] = {
+        MacState.IDLE: "Idle node",
+        MacState.READY_TO_TRANSMIT: "Node ready to transmit",
+        MacState.WAIT: "Node waiting",
+        MacState.TRANSMITTING: "Node transmitting",
+        MacState.JAMMING: "Node jamming"
     }
 
     MESSAGE_COLOR_DICT: Dict[MessageType, pygame.Color] = {

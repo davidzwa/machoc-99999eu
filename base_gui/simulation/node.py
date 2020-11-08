@@ -34,7 +34,10 @@ class Node(object):
         self.node_title = node_title
 
         self.waves: List[Wave] = list()
+        self.update_global_position()
 
+    def update_global_position(self):
+        # Function for updating position (allow GUI/simulation rescaling)
         self.global_position = vector2_global_to_local(
             self.position_meters,
             self.reference_frame,

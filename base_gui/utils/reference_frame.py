@@ -1,15 +1,15 @@
 from pygame import Vector2
 from pygame.rect import Rect
 
-# This function serves as reference frame scaling (pixels/meter)
-from base_gui.constants import PIXELS_PER_METER
+from base_gui.constants import get_pixel_meter_ratio
 
 
 def scale_pixels_to_meters(value, reverse=False):
+    # This function serves as reference frame scaling (pixels/meter)
     if not reverse:
-        return value / PIXELS_PER_METER
+        return value / get_pixel_meter_ratio()
     else:
-        return int(value * PIXELS_PER_METER)
+        return int(value * get_pixel_meter_ratio())
 
 
 def scale_tuple_pix2meter(coord, reverse=False):
@@ -19,8 +19,8 @@ def scale_tuple_pix2meter(coord, reverse=False):
     )
 
 
-# This function serves as reference frame translation
 def translate_global_to_local(position: tuple, reference_frame_rect: Rect, local_origin: Vector2, reverse=False):
+    # This function serves as reference frame translation
     if not reverse:
         return (position[0] - int(local_origin.x) - reference_frame_rect.left,
                 position[1] - int(local_origin.y) - reference_frame_rect.top)

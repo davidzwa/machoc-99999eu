@@ -47,6 +47,11 @@ class Game(ABC):
         self.__assert_checkbox(group_index, index)
         return self.side_menu.checkbox_groups[group_index].selected[index]
 
+    def toggle_checkbox_value(self, group_index, index):
+        self.__assert_checkbox(group_index, index)
+        value = self.side_menu.checkbox_groups[group_index].selected[index]
+        self.side_menu.checkbox_groups[group_index].selected[index] = not value
+
     @abstractmethod
     def add_nav_checkboxgroup_specific(self, sim_labels: tuple):
         """
@@ -64,7 +69,7 @@ class Game(ABC):
             logging.ERROR("Should run add_nav_menu before adding buttons.")
         return self.side_menu.add_checkbox_group(labels)
 
-    def add_timeline(self, position: Vector2, size: Vector2):
+    def add_sliders(self, position: Vector2, size: Vector2):
         self.timeline = Timeline(self.screen, position, size, lambda: self.timeline_select_update())
 
     def timeline_select_update(self):

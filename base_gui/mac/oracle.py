@@ -2,6 +2,7 @@ import statistics
 from typing import List
 
 import numpy as np
+from pygame import Rect
 
 from base_gui.mac.actorstate import FrozenActorState
 from base_gui.mac.actorstatehistory import ActorStateHistory
@@ -50,10 +51,12 @@ class Oracle(object):
         # - assign valid/separated random 2D position
         assert len(self.actors) != 0 or regenerate_positions is True
         if regenerate_positions is True:
+            print("Pre-processing guiSimMac - generating simulation actors")
             self.generate_actors()
 
         # - calculate neighbours to nodes based on transmission range cutoff
         # - set IDLE state to each node
+        print("Pre-processing guiSimMac - determining node neighbours")
         for i, actor in enumerate(self.actors):
             copy_actors = [x for i2, x in enumerate(self.actors) if i != i2]
             for neighbour_actor in copy_actors:
@@ -62,6 +65,7 @@ class Oracle(object):
                     actor.add_neighbour(neighbour_actor.state)
                     neighbour_actor.add_neighbour(actor.state)
 
+        print("Pre-processing guiSimMac - performing node neighbour sanity checks")
         check_actor = self.actors[0]
         for neighbour_actor_state in check_actor.state.neighbour_states:
             state_found = False
@@ -84,7 +88,10 @@ class Oracle(object):
 
         # Simulate each timestep
         # - Increment time (by delta)
+        print("Processing guiSimMac - time steps")
         for time_index in range(0, self.time_steps):
+            if (time_index % 100) == 0:
+                print("Ran time index {} out of {} time steps".format(time_index, self.time_steps))
             # print("time {}".format(self.delta_time * time_index))
             # 1) propagate waves
             for actor in self.actors:
