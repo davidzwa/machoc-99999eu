@@ -1,8 +1,10 @@
-from typing import Any
+from typing import Any, List
 
+import numpy as np
 import pygame
 from pygame import Vector2
 
+from base_gui import constants
 from base_gui.app_logging import LOGGER
 from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, SimType, SimConsts, MENU_CHECKBOXES_MAC, \
     MENU_CHECKBOX_MAC_AUTOPLAY, AUTOPLAY_SPEED_MS, TIMELINE_SCROLL_DEBOUNCE
@@ -12,6 +14,8 @@ from base_gui.simulation.gui_sim_mac import GuiSimMac
 def run_mac_simulation(guiSim: GuiSimMac, num_nodes):
     print("Generating guiSimMac with constants")
     guiSim.generate_oracle(num_nodes, SimConsts.DISTANCE_SPREAD_SIGMA_MAC)
+    print("Scaling pixels/meter to fit nodes in simulation")
+    scale_simulation_fit_nodes(guiSim, guiSim.sim_rect.inflate(0, -200))
     print("Processing guiSimMac")
     guiSim.run_oracle_preprocess(SimConsts.TIME_MAX_STEPS, SimConsts.TIME_STEP)
     return guiSim
@@ -31,11 +35,13 @@ def construct_simulation(simulation_type: SimType):
         Vector2(simulation_window_rect.midbottom[0] - 150, simulation_window_rect.midbottom[1] - 100),
         Vector2(300, 10)
     )
+    guiSimMac.generate_legend(Vector2(NAV_WIDTH + 10, 10), 10)
     return run_mac_simulation(guiSimMac, SimConsts.NUM_NODES_MAC)
 
 
 def run_simulation(payload: Any):
     LOGGER.info('Rerun simulation')
+    reset_simulation_to_start(None)
     nodeCount = guiSim.timeline.nodes_slider.getValue()
     return run_mac_simulation(guiSim, nodeCount)
 
@@ -49,21 +55,35 @@ def reset_simulation_to_start(payload: Any):
     guiSim.timeline.time_slider.setValue(0)
 
 
-def mouse_in_frame(mouse_coord, rect):
-    return mouse_coord[0] > rect.left \
-           and mouse_coord[0] < rect.left + rect.width \
-           and mouse_coord[1] > rect.top \
-           and mouse_coord[1] < rect.top + rect.height
+def scale_simulation_fit_nodes(guiSim, rect: pygame.Rect):
+    print("SCALING - default scale {}".format(constants.PIXELS_PER_METER))
+    guiSim.update_node_positions()
+    node_global_positions = [node.global_position for node in guiSim.data_nodes]
+    while True:
+        every_node_fits = True
+        for node_global_position in node_global_positions:
+            if constants.PIXELS_PER_METER == 1:
+                every_node_fits = True # Forced to quit
+                break
+            if not rect.collidepoint(node_global_position[0], node_global_position[1]):
+                constants.PIXELS_PER_METER -= 1
+                guiSim.update_node_positions()
+                node_global_positions = [node.global_position for node in guiSim.data_nodes]
+                every_node_fits = False
+
+        if every_node_fits is True:
+            print("SCALING done - new Pixels/Meter scale {}".format(constants.PIXELS_PER_METER))
+            break
+
 
 
 if __name__ == '__main__':
     # Fix seed for debugging purposes
-    # np.random.seed()
+    np.random.seed(0)
 
     ## Globals
     # guiSimRouting = construct_simulation(SimType.ROUTING)
     guiSimMac = construct_simulation(SimType.MAC)
-    guiSimMac.generate_legend(Vector2(NAV_WIDTH+10, 10), 10)
     print("GuiSimMac - processing done")
 
     game_quit = False

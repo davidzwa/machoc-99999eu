@@ -13,12 +13,12 @@ from base_gui.simulation.nodelegend import NodeLegend
 
 
 class GuiSimMac(Game):
-    def __init__(self, game_size: Vector2, sim_rect, local_origin):
+    def __init__(self, game_size: Vector2, sim_rect: pygame.Rect, local_origin):
         super(GuiSimMac, self).__init__(game_size)
         self.data_nodes: List[Node]
         self.legend_nodes: List[NodeLegend] = list()
 
-        self.sim_rect = sim_rect
+        self.sim_rect: pygame.Rect = sim_rect
         self.local_origin = local_origin
         self.oracle: Oracle
 
@@ -97,6 +97,10 @@ class GuiSimMac(Game):
 
             self.data_nodes[index].set_wavefronts(intransit_message_distances, intransit_message_types)
             self.data_nodes[index].set_color_by_state(state.macState)
+
+    def update_node_positions(self):
+        for sim_node in self.data_nodes:
+            sim_node.update_global_position()
 
     def render_legend(self):
         for legend_node in self.legend_nodes:

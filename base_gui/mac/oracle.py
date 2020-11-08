@@ -2,6 +2,7 @@ import statistics
 from typing import List
 
 import numpy as np
+from pygame import Rect
 
 from base_gui.mac.actorstate import FrozenActorState
 from base_gui.mac.actorstatehistory import ActorStateHistory
