@@ -5,7 +5,7 @@ from pygame import Vector2
 
 from base_gui.app_logging import LOGGER
 from base_gui.constants import SCREEN_SIZE, NAV_WIDTH, SIM_SIZE, SimType, SimConsts, MENU_CHECKBOXES_MAC, \
-    MENU_CHECKBOX_MAC_AUTOPLAY
+    MENU_CHECKBOX_MAC_AUTOPLAY, AUTOPLAY_SPEED_MS, TIMELINE_SCROLL_DEBOUNCE
 from base_gui.simulation.gui_sim_mac import GuiSimMac
 
 
@@ -17,10 +17,10 @@ def run_mac_simulation(guiSim: GuiSimMac, num_nodes):
     return guiSim
 
 
+# SimType is ignored as this simulator is currently meant for MAC only
 def construct_simulation(simulation_type: SimType):
     simulation_window_rect = pygame.Rect(NAV_WIDTH, 0, SIM_SIZE.x, SIM_SIZE.y)
     simulation_origin = Vector2(int(SIM_SIZE.x / 2), int(SIM_SIZE.y / 2))
-    # if simulation_type is SimType.MAC:
     guiSimMac = GuiSimMac(SCREEN_SIZE, simulation_window_rect, simulation_origin)
     guiSimMac.create_game()
     guiSimMac.add_nav_button(label="Run simulation", button_callback=run_simulation)
@@ -32,32 +32,20 @@ def construct_simulation(simulation_type: SimType):
         Vector2(300, 10)
     )
     return run_mac_simulation(guiSimMac, SimConsts.NUM_NODES_MAC)
-    # else:
-    #     guiSimRouting = GuiSimRouting(SCREEN_SIZE, simulation_window_rect, simulation_origin)
-    #     guiSimRouting.create_game()
-    #     guiSimRouting.add_nav_button(label="Simulate", button_callback=start_simulation)
-    #     guiSimRouting.add_nav_button(label="Stop", button_callback=None)
-    #     guiSimRouting.add_nav_button(label="Reset", button_callback=None)
-    #     guiSimRouting.add_nav_checkboxgroup_specific(MENU_CHECKBOXES_ROUTING)
-    #     guiSimRouting.add_timeline(
-    #         Vector2(simulation_window_rect.midbottom[0] - 150, simulation_window_rect.midbottom[1] - 100),
-    #         Vector2(300, 10)
-    #     )
-    #     guiSimRouting.generate_nodes_multivariate(SimConsts.NUM_NODES_ROUTING, SimConsts.DISTANCE_SPREAD_SIGMA_ROUTING)
-    #     return guiSimRouting
 
 
 def run_simulation(payload: Any):
     LOGGER.info('Rerun simulation')
     nodeCount = guiSim.timeline.nodes_slider.getValue()
-    return run_mac_simulation(guiSimMac, nodeCount)
+    return run_mac_simulation(guiSim, nodeCount)
 
 
 def toggle_autoplay(payload: Any):
-    pass
+    guiSim.toggle_checkbox_value(1, MENU_CHECKBOX_MAC_AUTOPLAY)
 
 
 def reset_simulation_to_start(payload: Any):
+    guiSim.show_oracle_states_timeindex = 0
     guiSim.timeline.time_slider.setValue(0)
 
 
@@ -69,12 +57,14 @@ def mouse_in_frame(mouse_coord, rect):
 
 
 if __name__ == '__main__':
+    # Fix seed for debugging purposes
+    # np.random.seed()
+
     ## Globals
     # guiSimRouting = construct_simulation(SimType.ROUTING)
     guiSimMac = construct_simulation(SimType.MAC)
-
-    # np.random.seed()  # Fix seed for debugging purposes
-    print("GuiSimMac done")
+    guiSimMac.generate_legend(Vector2(NAV_WIDTH+10, 10), 10)
+    print("GuiSimMac - processing done")
 
     game_quit = False
     guiSim = guiSimMac
@@ -83,9 +73,7 @@ if __name__ == '__main__':
     guiSim.timeline.nodes_slider.setValue(last_num_nodes)
 
     # Auto-play sim variables
-    step_difference_millis = 200  # 4 steps per second
     simulation_time = pygame.time.get_ticks()  # integer index < SimConsts.TIME_MAX_STEPS
-    timeline_debounce = 75  # minimum ticks between timeline update by LEFT/RIGHT arrows
     last_timeline_change = pygame.time.get_ticks()
 
     while not game_quit:
@@ -97,40 +85,21 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 game_quit = True
 
-        # Switch over sim-type based on checkbox in menu
-        # if not guiSim.get_checkbox_value(0, MENU_CHECKBOX_SIMTYPE_INDEX) \
-        #         and current_sim_type is SimType.ROUTING:
         guiSim = guiSimMac
-        # Synchronize SIM-TYPE state to avoid going back-and-forth (inconsistent main menu between sim instances)
-        # guiSim.reset_checkbox(0, MENU_CHECKBOX_SIMTYPE_INDEX, False)
-        # logging.info("Switched to MAC simulator.")
         current_sim_type = SimType.MAC
         sliderVal = guiSim.timeline.nodes_slider.getValue()
         last_num_nodes = sliderVal
-        # elif guiSim.get_checkbox_value(0, MENU_CHECKBOX_SIMTYPE_INDEX) \
-        #         and current_sim_type is not SimType.ROUTING:
-        #     guiSim = guiSimRouting
-        #     # Synchronize SIM-TYPE state to avoid going back-and-forth (inconsistent main menu between sim instances)
-        #     guiSim.reset_checkbox(0, MENU_CHECKBOX_SIMTYPE_INDEX, True)
-        #     logging.info("Switched to ROUTING simulator.")
-        #     current_sim_type = SimType.ROUTING
-        #     sliderVal = guiSim.timeline.nodes_slider.getValue()
-        #     last_num_nodes = sliderVal
 
         guiSim.timeline.nodes_slider.listen(events)
         guiSim.timeline.time_slider.listen(events)
-        sliderVal = guiSim.timeline.nodes_slider.getValue()
-        # Updating nodes is not smart for now, maybe later.
-        # if sliderVal != last_num_nodes:
-        #     last_num_nodes = sliderVal
 
-        ### RENDER
+        ### RENDER and UPDATE
         guiSim.screen.fill((245, 245, 245))
 
         # Calculate timeline slider value based on keys and waiting
         timeVal = guiSim.timeline.time_slider.getValue()
         newTimeValue = timeVal
-        if current_time_sim - last_timeline_change > timeline_debounce:
+        if current_time_sim - last_timeline_change > TIMELINE_SCROLL_DEBOUNCE:
             last_timeline_change = current_time_sim
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT]:
@@ -149,22 +118,25 @@ if __name__ == '__main__':
         font_surface = guiSim.font.render("Number of nodes: {} (requires new simulation run)".format(sliderVal), True,
                                           pygame.Color("black"))
         guiSim.screen.blit(font_surface, dest=(guiSim.timeline.nodes_slider.x, guiSim.timeline.nodes_slider.y + 20))
-        font_surface = guiSim.font.render("Current time: {} steps (scroll with LEFT/RIGHT arrows or use auto-play mode)".format(timeVal), True, pygame.Color("black"))
+        font_surface = guiSim.font.render(
+            "Current time: {} steps (scroll with LEFT/RIGHT arrows or use auto-play mode)".format(timeVal), True,
+            pygame.Color("black"))
         guiSim.screen.blit(font_surface, dest=(guiSim.timeline.time_slider.x, guiSim.timeline.time_slider.y + 20))
 
         ### PROCESS mouse & RENDER WAVE and NODES
         autoplay = guiSim.get_checkbox_value(1, MENU_CHECKBOX_MAC_AUTOPLAY)
         if autoplay:
-            if current_sim_type is SimType.MAC and current_time_sim - simulation_time > step_difference_millis:
+            if current_sim_type is SimType.MAC and current_time_sim - simulation_time > AUTOPLAY_SPEED_MS:
                 simulation_time = current_time_sim
                 guiSimMac.show_next_oracle_timeindex()
                 print("Showing time-index", guiSimMac.show_oracle_states_timeindex)
                 guiSimMac.timeline.time_slider.setValue(guiSimMac.show_oracle_states_timeindex)
         else:
             guiSimMac.draw_oraclestate_waves(timeVal)
-        guiSim.render_datanodes()
 
-        # RENDER - Nodes and menu
+        # RENDER - Nodes, sliders and menu
+        guiSim.render_datanodes()
+        guiSim.render_legend()
         guiSim.timeline.render()
         guiSim.side_menu.render_nav_backlight()
         guiSim.side_menu.render(events)

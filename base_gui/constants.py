@@ -1,5 +1,5 @@
 import enum
-from typing import Dict
+from typing import Dict, Any
 
 import pygame
 from pygame import Vector2
@@ -34,10 +34,11 @@ NAV_WIDTH = 200
 BOTTOM_HEIGHT = 0
 SIM_SIZE = Vector2(1200, 800)
 SCREEN_SIZE = Vector2(SIM_SIZE.x + NAV_WIDTH, SIM_SIZE.y + BOTTOM_HEIGHT)
-
+AUTOPLAY_SPEED_MS = 200  # 5 steps per second
+TIMELINE_SCROLL_DEBOUNCE = 75  # minimum ticks between timeline update by LEFT/RIGHT arrows
 
 class SimConsts(object):
-    TIME_MAX_STEPS = 1000
+    TIME_MAX_STEPS = 100
     TIME_STEP = 1
 
     # MAC SIMULATION PARAMETERS
@@ -64,6 +65,15 @@ class SimConsts(object):
         MacState.WAIT: pygame.Color("green"),
         MacState.TRANSMITTING: pygame.Color("purple"),
         MacState.JAMMING: pygame.Color("red")
+    }
+
+    # Used for legend
+    STATE_DESCRIPTION_DICT: Dict[MacState, Any] = {
+        MacState.IDLE: "Idle node",
+        MacState.READY_TO_TRANSMIT: "Node ready to transmit",
+        MacState.WAIT: "Node waiting",
+        MacState.TRANSMITTING: "Node transmitting",
+        MacState.JAMMING: "Node jamming"
     }
 
     MESSAGE_COLOR_DICT: Dict[MessageType, pygame.Color] = {

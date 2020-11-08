@@ -47,6 +47,11 @@ class Game(ABC):
         self.__assert_checkbox(group_index, index)
         return self.side_menu.checkbox_groups[group_index].selected[index]
 
+    def toggle_checkbox_value(self, group_index, index):
+        self.__assert_checkbox(group_index, index)
+        value = self.side_menu.checkbox_groups[group_index].selected[index]
+        self.side_menu.checkbox_groups[group_index].selected[index] = not value
+
     @abstractmethod
     def add_nav_checkboxgroup_specific(self, sim_labels: tuple):
         """
