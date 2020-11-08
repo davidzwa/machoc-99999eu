@@ -51,13 +51,9 @@ class SimConsts(object):
 
     TRANSMISSION_RANGE = 20  # meters
 
-    TRANSMISSION_CHANCE = 0.01  # Transmission chance per timestep
-
-    WAVES_DENSITY = 2
-
-    # ROUTING SIMULATION PARAMETERS
-    NUM_NODES_ROUTING = 5
-    DISTANCE_SPREAD_SIGMA_ROUTING = 30
+    TRAFFIC_LOAD = 10  # Messages per timestep
+    MESSAGE_ARRIVAL_PROBABILITY = TRAFFIC_LOAD / NUM_NODES_MAC  # Message chance per timestep
+    assert MESSAGE_ARRIVAL_PROBABILITY <= 1
 
     # MAXIMAL NUMBER OF RETRANSMISSION ATTEMPTS BEFORE DROPPIING THE PACKAGE
     MAX_ATTEMPTS = 6
@@ -78,3 +74,5 @@ class SimConsts(object):
         MessageType.JAMMING: pygame.Color("red3"),
         MessageType.RETRANSMISSION: pygame.Color("blue")
     }
+
+    WAVES_DENSITY = 2

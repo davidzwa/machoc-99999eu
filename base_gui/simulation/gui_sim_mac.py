@@ -32,7 +32,7 @@ class GuiSimMac(Game):
         self.oracle.preprocess(time_steps=time_steps, delta_time=time_delta,
                                packet_length=SimConsts.PACKET_LENGTH_SPACE,
                                transmission_range=SimConsts.TRANSMISSION_RANGE,
-                               transmission_chance=SimConsts.TRANSMISSION_CHANCE,
+                               transmission_chance=SimConsts.MESSAGE_ARRIVAL_PROBABILITY,
                                regenerate_positions=False)
 
     # def generate_nodes_multivariate(self, num_nodes: int, cov_diag=1):

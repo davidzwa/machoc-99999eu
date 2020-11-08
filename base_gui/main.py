@@ -57,7 +57,7 @@ def mouse_in_frame(mouse_coord, rect):
 
 
 if __name__ == '__main__':
-    np.random.seed(0)  # Fix seed for debugging purposes
+    np.random.seed()  # Fix seed for debugging purposes
 
     guiSimMac = construct_simulation(SimType.MAC)
     guiSimRouting = construct_simulation(SimType.ROUTING)
