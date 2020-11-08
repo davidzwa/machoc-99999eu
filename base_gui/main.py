@@ -15,7 +15,7 @@ def run_mac_simulation(guiSim: GuiSimMac, num_nodes):
     print("Generating guiSimMac with constants")
     guiSim.generate_oracle(num_nodes, SimConsts.DISTANCE_SPREAD_SIGMA_MAC)
     print("Scaling pixels/meter to fit nodes in simulation")
-    scale_simulation_fit_nodes(guiSim, guiSim.sim_rect.inflate(0, -200))
+    scale_simulation_fit_nodes(guiSim, guiSim.sim_rect.inflate(-100, -200))
     print("Processing guiSimMac")
     guiSim.run_oracle_preprocess(SimConsts.TIME_MAX_STEPS, SimConsts.TIME_STEP)
     return guiSim
@@ -78,7 +78,7 @@ def scale_simulation_fit_nodes(guiSim, rect: pygame.Rect):
 
 if __name__ == '__main__':
     # Fix seed for debugging purposes
-    np.random.seed(0)
+    # np.random.seed(0)
 
     ## Globals
     guiSimMac = construct_simulation(SimType.MAC)

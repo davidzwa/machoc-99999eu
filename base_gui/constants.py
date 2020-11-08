@@ -55,7 +55,7 @@ class SimConsts(object):
     def get_simconsts_traffic_load():
         return SimConsts.TRAFFIC_LOAD
 
-    TIME_MAX_STEPS = 100
+    TIME_MAX_STEPS = 200
     TIME_STEP = 1
 
     # MAC SIMULATION PARAMETERS
