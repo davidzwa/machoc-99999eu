@@ -22,13 +22,17 @@ class Timeline(object):
         assert updatetime_callback is not None
         self.update_callback = updatetime_callback
 
-        self.nodes_slider = Slider(
+        self.network_load_slider = Slider(
             self.screen, int(self.position.x), int(self.position.y), int(self.size.x), int(self.size.y),
+            min=0.1, max=10, step=0.1, initial=1)
+        self.nodes_slider = Slider(
+            self.screen, int(self.position.x), int(self.position.y)+50, int(self.size.x), int(self.size.y),
             min=2, max=30, step=1, initial=10)
         self.time_slider = Slider(
-            self.screen, int(self.position.x), int(self.position.y)+50, int(self.size.x), int(self.size.y),
+            self.screen, int(self.position.x), int(self.position.y)+100, int(self.size.x), int(self.size.y),
             min=0, max=SimConsts.TIME_MAX_STEPS-1, step=SimConsts.TIME_STEP, initial=0)
 
     def render(self):
+        self.network_load_slider.draw()
         self.nodes_slider.draw()
         self.time_slider.draw()

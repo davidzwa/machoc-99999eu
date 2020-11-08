@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 import numpy as np
 import pygame
@@ -31,8 +31,8 @@ def construct_simulation(simulation_type: SimType):
     guiSimMac.add_nav_button(label="Toggle auto-play", button_callback=toggle_autoplay)
     guiSimMac.add_nav_button(label="Reset to start", button_callback=reset_simulation_to_start)
     guiSimMac.add_nav_checkboxgroup_specific(MENU_CHECKBOXES_MAC)
-    guiSimMac.add_timeline(
-        Vector2(simulation_window_rect.midbottom[0] - 150, simulation_window_rect.midbottom[1] - 100),
+    guiSimMac.add_sliders(
+        Vector2(simulation_window_rect.bottomleft[0] + 50, simulation_window_rect.midbottom[1] - 150),
         Vector2(300, 10)
     )
     guiSimMac.generate_legend(Vector2(NAV_WIDTH + 10, 10), 10)
@@ -63,7 +63,7 @@ def scale_simulation_fit_nodes(guiSim, rect: pygame.Rect):
         every_node_fits = True
         for node_global_position in node_global_positions:
             if constants.PIXELS_PER_METER == 1:
-                every_node_fits = True # Forced to quit
+                every_node_fits = True  # Forced to quit
                 break
             if not rect.collidepoint(node_global_position[0], node_global_position[1]):
                 constants.PIXELS_PER_METER -= 1
@@ -76,13 +76,11 @@ def scale_simulation_fit_nodes(guiSim, rect: pygame.Rect):
             break
 
 
-
 if __name__ == '__main__':
     # Fix seed for debugging purposes
     np.random.seed(0)
 
     ## Globals
-    # guiSimRouting = construct_simulation(SimType.ROUTING)
     guiSimMac = construct_simulation(SimType.MAC)
     print("GuiSimMac - processing done")
 
@@ -104,12 +102,17 @@ if __name__ == '__main__':
         for event in events:
             if event.type == pygame.QUIT:
                 game_quit = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    toggle_autoplay(None)
 
         guiSim = guiSimMac
         current_sim_type = SimType.MAC
         sliderVal = guiSim.timeline.nodes_slider.getValue()
+        SimConsts.set_num_nodes_mac(sliderVal) # Update the constants immediately - for new simulations
         last_num_nodes = sliderVal
 
+        guiSim.timeline.network_load_slider.listen(events)
         guiSim.timeline.nodes_slider.listen(events)
         guiSim.timeline.time_slider.listen(events)
 
@@ -135,6 +138,11 @@ if __name__ == '__main__':
             guiSim.timeline.time_slider.setValue(timeVal)
 
         # RENDER - Update text by grabbing guiSim children
+        networkLoadVal = guiSim.timeline.network_load_slider.getValue()
+        SimConsts.set_simconsts_network_load(networkLoadVal)
+        font_surface = guiSim.font.render("Network traffic: {} messages/time-step (requires new simulation run)".format(round(networkLoadVal, 1)), True,
+                                          pygame.Color("black"))
+        guiSim.screen.blit(font_surface, dest=(guiSim.timeline.nodes_slider.x, guiSim.timeline.network_load_slider.y + 20))
         font_surface = guiSim.font.render("Number of nodes: {} (requires new simulation run)".format(sliderVal), True,
                                           pygame.Color("black"))
         guiSim.screen.blit(font_surface, dest=(guiSim.timeline.nodes_slider.x, guiSim.timeline.nodes_slider.y + 20))

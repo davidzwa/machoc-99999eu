@@ -69,7 +69,7 @@ class Game(ABC):
             logging.ERROR("Should run add_nav_menu before adding buttons.")
         return self.side_menu.add_checkbox_group(labels)
 
-    def add_timeline(self, position: Vector2, size: Vector2):
+    def add_sliders(self, position: Vector2, size: Vector2):
         self.timeline = Timeline(self.screen, position, size, lambda: self.timeline_select_update())
 
     def timeline_select_update(self):

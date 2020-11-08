@@ -16,7 +16,7 @@ MENU_CHECKBOXES_GENERIC = (
 )
 MENU_CHECKBOX_MAC_AUTOPLAY = 0
 MENU_CHECKBOXES_MAC = (
-    "Auto-play sim",  # index 0
+    "Auto-play sim (SPACE)",  # index 0
 )
 MENU_CHECKBOXES_ROUTING = (
     "ROUTING checkbox here",
@@ -30,6 +30,7 @@ class SimType(enum.Enum):
 def get_pixel_meter_ratio():
     return PIXELS_PER_METER
 
+
 PIXELS_PER_METER = 45  # Might become dynamic based on zoom later
 SIM_MODE = SimType.MAC  # Not implemented
 NAV_WIDTH = 200
@@ -37,9 +38,23 @@ BOTTOM_HEIGHT = 0
 SIM_SIZE = Vector2(1200, 800)
 SCREEN_SIZE = Vector2(SIM_SIZE.x + NAV_WIDTH, SIM_SIZE.y + BOTTOM_HEIGHT)
 AUTOPLAY_SPEED_MS = 200  # 5 steps per second
-TIMELINE_SCROLL_DEBOUNCE = 75  # minimum ticks between timeline update by LEFT/RIGHT arrows
+TIMELINE_SCROLL_DEBOUNCE = 100  # minimum ticks between timeline update by LEFT/RIGHT arrows
 
 class SimConsts(object):
+    @staticmethod
+    def set_num_nodes_mac(num_nodes_mac):
+        SimConsts.NUM_NODES_MAC = num_nodes_mac
+        SimConsts.set_simconsts_network_load(SimConsts.TRAFFIC_LOAD)
+
+    @staticmethod
+    def set_simconsts_network_load(network_load):
+        SimConsts.TRAFFIC_LOAD = network_load
+        SimConsts.MESSAGE_ARRIVAL_PROBABILITY = SimConsts.TRAFFIC_LOAD / SimConsts.NUM_NODES_MAC
+
+    @staticmethod
+    def get_simconsts_traffic_load():
+        return SimConsts.TRAFFIC_LOAD
+
     TIME_MAX_STEPS = 100
     TIME_STEP = 1
 
