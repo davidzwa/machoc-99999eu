@@ -55,7 +55,7 @@ class SimConsts(object):
     def get_simconsts_traffic_load():
         return SimConsts.TRAFFIC_LOAD
 
-    TIME_MAX_STEPS = 200
+    TIME_MAX_STEPS = 1000
     TIME_STEP = 1
 
     # MAC SIMULATION PARAMETERS
@@ -69,7 +69,7 @@ class SimConsts(object):
 
     TRANSMISSION_RANGE = 20  # meters
 
-    TRAFFIC_LOAD = 10  # Messages per timestep
+    TRAFFIC_LOAD = 0.01  # Messages per timestep
     MESSAGE_ARRIVAL_PROBABILITY = TRAFFIC_LOAD / NUM_NODES_MAC  # Message chance per timestep
     assert MESSAGE_ARRIVAL_PROBABILITY <= 1
 

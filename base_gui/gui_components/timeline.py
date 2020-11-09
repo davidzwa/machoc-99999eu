@@ -24,7 +24,7 @@ class Timeline(object):
 
         self.network_load_slider = Slider(
             self.screen, int(self.position.x), int(self.position.y), int(self.size.x), int(self.size.y),
-            min=0.1, max=10, step=0.1, initial=1)
+            min=0.001, max=1, step=0.001, initial=0.10)
         self.nodes_slider = Slider(
             self.screen, int(self.position.x), int(self.position.y)+50, int(self.size.x), int(self.size.y),
             min=2, max=30, step=1, initial=10)
