@@ -33,7 +33,7 @@ def construct_simulation(simulation_type: SimType):
     guiSimMac.add_nav_checkboxgroup_specific(MENU_CHECKBOXES_MAC)
     guiSimMac.add_sliders(
         Vector2(simulation_window_rect.bottomleft[0] + 50, simulation_window_rect.midbottom[1] - 150),
-        Vector2(300, 10)
+        Vector2(500, 10)
     )
     guiSimMac.generate_legend(Vector2(NAV_WIDTH + 10, 10), 10)
     return run_mac_simulation(guiSimMac, SimConsts.NUM_NODES_MAC)
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         # RENDER - Update text by grabbing guiSim children
         networkLoadVal = guiSim.timeline.network_load_slider.getValue()
         SimConsts.set_simconsts_network_load(networkLoadVal)
-        font_surface = guiSim.font.render("Network traffic: {} messages/time-step (requires new simulation run)".format(round(networkLoadVal, 1)), True,
+        font_surface = guiSim.font.render("Network traffic: {} messages/time-step (requires new simulation run)".format(round(networkLoadVal, 3)), True,
                                           pygame.Color("black"))
         guiSim.screen.blit(font_surface, dest=(guiSim.timeline.nodes_slider.x, guiSim.timeline.network_load_slider.y + 20))
         font_surface = guiSim.font.render("Number of nodes: {} (requires new simulation run)".format(sliderVal), True,

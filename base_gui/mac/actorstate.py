@@ -34,6 +34,7 @@ class FrozenActorState(object):
     num_dropped_messages: int
 
     transmission_times: list
+    num_messages: int
 
 
 class ActorState(object):
@@ -70,6 +71,7 @@ class ActorState(object):
         self.num_transmission_attempts = 0
         self.num_collisions = 0
         self.num_dropped_messages = 0
+        self.num_messages = 0
 
         self.transmission_times = list()
 
@@ -99,6 +101,7 @@ class ActorState(object):
             num_dropped_messages=self.num_dropped_messages,
             num_successful_transmissions=self.num_successful_transmissions,
             num_transmission_attempts=self.num_transmission_attempts,
+            num_messages=self.num_messages,
             transmission_times=self.transmission_times
         )
 
@@ -153,6 +156,7 @@ class ActorState(object):
 
         if new_message:
             self.new_arrival()
+            self.num_messages += 1
 
         # mac protocol FSM
         next_state = self.state

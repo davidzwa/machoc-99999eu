@@ -127,6 +127,7 @@ class Oracle(object):
             final_statistics.num_dropped_messages += stats.num_dropped_messages
             final_statistics.num_successful_transmissions += stats.num_successful_transmissions
             final_statistics.num_transmission_attempts += stats.num_transmission_attempts
+            final_statistics.num_messages += stats.num_messages
 
         final_statistics.transmission_time_stats()
         print("final counts")
@@ -134,6 +135,7 @@ class Oracle(object):
         print("number of dropped messages: {}".format(final_statistics.num_dropped_messages))
         print("number of succesfull transmissions: {}".format(final_statistics.num_successful_transmissions))
         print("number of transmission attempts: {}".format(final_statistics.num_transmission_attempts))
+        print("total messages = {}".format(final_statistics.num_messages))
 
         print("transmission time statistics")
         print("min: {}\nmax: {}\nmean: {}".format(final_statistics.transmission_times_min,
@@ -171,6 +173,7 @@ class Statistics:
     num_dropped_messages: int
     num_successful_transmissions: int
     num_transmission_attempts: int
+    num_messages: int
 
     transmission_times: list
 
@@ -179,11 +182,13 @@ class Statistics:
         self.num_dropped_messages = 0
         self.num_successful_transmissions = 0
         self.num_transmission_attempts = 0
+        self.num_messages = 0
 
         self.transmission_times = list()
         self.transmission_times_min = 0
         self.transmission_times_max = 0
         self.transmission_times_mean = 0
+
 
     def transmission_time_stats(self):
         self.transmission_times.sort()
